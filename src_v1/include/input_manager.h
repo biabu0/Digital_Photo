@@ -12,25 +12,26 @@
 #define INPUT_VAL_EXIT 2
 #define INPUT_VAL_UNKNOWN -1
 
-// ±£´æÊäÈëÊÂ¼şµÄ½á¹¹Ìå
+// ä¿å­˜è¾“å…¥äº‹ä»¶çš„ç»“æ„ä½“
 typedef struct InputEvent{
     struct timeval tTime;
-    // Àà±ğ£º°´¼üÀà»¹ÊÇ´¥ÃşÆÁÀàµÈ       0»òÕß1
+    // ç±»åˆ«ï¼šæŒ‰é”®ç±»è¿˜æ˜¯è§¦æ‘¸å±ç±»ç­‰       0æˆ–è€…1
     int iType;
-    // val Öµ±íÊ¾¶¯×÷
-    int iVal;  
-
+    int iX; //è§¦æ‘¸å±æŒ‰ä¸‹çš„ä½ç½®
+    int iY;
+    int iKey;       //æŒ‰é”®ç±»çš„å€¼
+    int iPressure;   //è§¦æ‘¸å±çš„å‹åŠ›å€¼ï¼ŒæŒ‰ä¸‹ä¸º1ï¼Œæ¾å¼€ä¸º0
 } T_InputEvent, *PT_InputEvent;
 
 typedef struct InputOpr{
     char * name;
     pthread_t pid;
-    // ³õÊ¼»¯ÓëÍË³ö
+    // åˆå§‹åŒ–ä¸é€€å‡º
     int (*DeviceInit)(void);
     int (*DeviceExit)(void);
-    // »ñÈ¡ÊäÈëÊÂ¼ş
+    // è·å–è¾“å…¥äº‹ä»¶
     int (*GetInputEnvent)(PT_InputEvent ptInputEvent);
-    // Á´±í
+    // é“¾è¡¨
     struct InputOpr *ptNext;
 }T_InputOpr, *PT_InputOpr;
 

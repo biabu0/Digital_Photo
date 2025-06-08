@@ -7,6 +7,7 @@ typedef struct PixelDatas{
     int iHeight;
     int iBpp;
     int iLineBytes;
+    int iTotalBytes;
     // 指针指向像素数据，需要分配内存
     unsigned char *aucPixelDatas;
 }T_PixelDatas, *PT_PixelDatas;

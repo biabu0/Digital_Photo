@@ -42,7 +42,6 @@ static void *InputEventTreadFunc(void *pVoid){
     //线程函数可以获得并调用输入设备的GetInputEnvent函数
     /* 定义函数指针 */ 
     T_InputEvent tInputEvent;
-
     int (*GetInputEnvent)(PT_InputEvent ptInputEvent);
     GetInputEnvent = (int (*) (PT_InputEvent))pVoid;
     while(1){
@@ -84,7 +83,6 @@ int GetInputEvent(PT_InputEvent ptInputEvent){
     *ptInputEvent = g_tInputEvent;
     pthread_mutex_unlock(&g_tMutex);
     return 0;
-
 }
 
 int InputInit(void){

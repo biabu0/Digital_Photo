@@ -86,7 +86,7 @@ int DelFontOprFrmEncoding(PT_EncodingOpr ptEncodingOpr, PT_FontOpr ptFontOpr){
 		return -1;
 	}else{
 		ptTmp = ptEncodingOpr->ptFontOprSupportedHead;
-		if(strcmp(ptTmp, ptFontOpr) == 0){
+		if(strcmp(ptTmp->name, ptFontOpr->name) == 0){
 			ptEncodingOpr->ptFontOprSupportedHead = ptTmp->ptNext;
 			free(ptTmp);
 			return 0;
@@ -96,7 +96,7 @@ int DelFontOprFrmEncoding(PT_EncodingOpr ptEncodingOpr, PT_FontOpr ptFontOpr){
 		ptTmp = ptPre->ptNext;
 
 		while(ptTmp){
-			if(strcmp(ptTmp, ptFontOpr) == 0){
+			if(strcmp(ptTmp->name, ptFontOpr->name) == 0){
 				ptPre->ptNext = ptTmp->ptNext;
 				free(ptTmp);
 				return 0;

@@ -4,9 +4,6 @@
 #include<stdio.h>
 #include <stdarg.h>
 
-
-#define DEFAULT_DEBUGLEVEL 4
-
 static PT_DebugOpr g_ptDebugOprHead = NULL;
 // 开始将其设置为4
 static int g_iDebugLevelLimit = DEFAULT_DEBUGLEVEL;

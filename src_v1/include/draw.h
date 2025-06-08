@@ -7,6 +7,6 @@ int SelectAndInitDisplay(char *pcName);
 int ShowNextPage(void);
 int ShowPrePage(void);
 int DrawInit(void);
-int GetDispResolution(int *piXres, int *piYres);
+//int GetDispResolution(int *piXres, int *piYres, int *piBpp);
 
 #endif

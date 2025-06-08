@@ -47,6 +47,9 @@ static int StdinDeviceExit(void){
 }
 
 static int StdinGetInputEncent(PT_InputEvent ptInputEvent){
+
+
+#if 0
     /* 
      * 如果存在数据则读取、处理并返回；
      * 如果没有数据，立刻返回，不等待
@@ -59,6 +62,7 @@ static int StdinGetInputEncent(PT_InputEvent ptInputEvent){
     /* 处理数据 会休眠直到有输入 */
     c = fgetc(stdin);
     gettimeofday(&ptInputEvent->tTime, NULL);
+    
     switch(c){
         case 'u':
             ptInputEvent->iVal = INPUT_VAL_UP;
@@ -73,6 +77,8 @@ static int StdinGetInputEncent(PT_InputEvent ptInputEvent){
             ptInputEvent->iVal = INPUT_VAL_UNKNOWN;
             break; 
     }
+#endif
+
     return 0;
 }
 int StdinInit(void){

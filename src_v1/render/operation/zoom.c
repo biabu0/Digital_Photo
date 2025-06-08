@@ -16,6 +16,8 @@ int PicZoom(PT_PixelDatas ptOriginPic, PT_PixelDatas ptZoomPic){
     unsigned long* pdwSrcXTable = malloc(sizeof(unsigned long) * dwDestWidth);
 
     if(ptOriginPic->iBpp != ptZoomPic->iBpp){
+        printf("ptOriginPic->iBpp: %d\n",ptOriginPic->iBpp);
+        printf("ptZoomPic->iBpp: %d\n",ptZoomPic->iBpp);
         return -1;
     }
 

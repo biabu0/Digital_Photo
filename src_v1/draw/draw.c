@@ -10,7 +10,7 @@
 #include <disp_manager.h>
 #include <string.h>
 #include <input_manager.h>
-
+#include <stdlib.h>
 
 /*定义一个页描述结构体，包含当前页数，当前LCD首个显示字符在文件中的位置以及下一页首个显示字符在文件中的位置；
  *结构体指针指向前或者下一页的页描述结构体；
@@ -418,13 +418,14 @@ int DrawInit(void){
 }
 
 // 获取显示分辨率，用于触摸屏中判断触摸点位于上中下哪一部分
-int GetDispResolution(int *piXres, int *piYres){
-    if(g_ptDispOpr){
-        *piXres = g_ptDispOpr->iXres;
-        *piYres = g_ptDispOpr->iYres;
-        return 0;
-    }else{
-        return -1;
-    }
-}
+// int GetDispResolution(int *piXres, int *piYres, int *piBpp){
+//     if(g_ptDispOpr){
+//         *piXres = g_ptDispOpr->iXres;
+//         *piYres = g_ptDispOpr->iYres;
+//         *piBpp = g_ptDispOpr->iBpp;
+//         return 0;
+//     }else{
+//         return -1;
+//     }
+// }
 

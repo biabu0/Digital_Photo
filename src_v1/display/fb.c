@@ -9,11 +9,14 @@
 #include <sys/mman.h>
 #include <linux/fb.h>
 #include <string.h>
+#include <string.h>
+
 
 
 static int FBDeviceInit(void);		//初始化设备
 static int FBShowPixel(int iPenX, int iPenY, unsigned int dwColor);		//显示字符
 static int FBCleanScreen(unsigned int dwBackColor);		//清屏，用于翻页
+static int FBShowPage(PT_VideoMem ptVideoMem);
 
 static int g_iFBFd;			/*g:全局变量，t:结构体*/
 static struct fb_var_screeninfo g_tVar;	/* Current var */
@@ -28,6 +31,7 @@ static T_DispOpr g_tFBDispOpr = {
 	.DeviceInit  = FBDeviceInit,
 	.ShowPixel   = FBShowPixel,
 	.CleanScreen = FBCleanScreen,
+	.ShowPage    = FBShowPage,
 };
 
 static int FBDeviceInit(void){
@@ -63,6 +67,7 @@ static int FBDeviceInit(void){
 	g_tFBDispOpr.iXres = g_tVar.xres;
 	g_tFBDispOpr.iYres = g_tVar.yres;
 	g_tFBDispOpr.iBpp  = g_tVar.bits_per_pixel;
+	g_tFBDispOpr.iLineWidth = g_tFBDispOpr.iXres * g_tFBDispOpr.iBpp / 8;
 	g_tFBDispOpr.pucDispMem = g_pucFbMem;
 
 	return 0;
@@ -181,6 +186,10 @@ static int FBCleanScreen(unsigned int dwBackColor){
 	return 0;
 }
 
+static int FBShowPage(PT_VideoMem ptVideoMem){
+	memcpy(g_tFBDispOpr.pucDispMem, ptVideoMem->tPixelDatas.aucPixelDatas, ptVideoMem->tPixelDatas.iTotalBytes);
+	return 0;
+}
 int FBInit(void){
 	return RegisterDispOpr(&g_tFBDispOpr);
 }

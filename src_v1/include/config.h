@@ -10,6 +10,7 @@
 #define COLOR_BACKGROUND   0xE7DBB5  /* 泛黄纸张 */
 #define COLOR_FOREGROUND   0x514438  /* 褐色字体 */
 
+#define DEFAULT_DEBUGLEVEL 8
 
 #define APP_EMERG "<0>"
 #define APP_ALERT "<1>"
@@ -24,5 +25,7 @@
 //#define DBG_PRINTF(...)  
 #define DBG_PRINTF DebugPrint
 //#define DBG_PRINTF printf
+
+#define ICON_PATH "/etc/digitpic/icons"
 
 #endif /* _CONFIG_H */

@@ -148,8 +148,12 @@ static int BMPGetPixelDatas (unsigned char *aFileHead, PT_PixelDatas ptPixelData
     }
     return 0;
 }
-static int BMPFreePixelDatas(PT_PixelDatas tPixelDatas){
-    free(tPixelDatas->aucPixelDatas);
+static int BMPFreePixelDatas(PT_PixelDatas ptPixelDatas){
+    if (!ptPixelDatas || !ptPixelDatas->aucPixelDatas) {
+        printf("Invalid pointer detected\n");
+        return -1;
+    }
+    free(ptPixelDatas->aucPixelDatas);
 
     return 0;
 }

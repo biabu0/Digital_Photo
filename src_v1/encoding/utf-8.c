@@ -19,7 +19,7 @@ static int isUtf8Coding(unsigned char *pucBufHead){
 
 	const char aStrUtf8[] = {0xEF, 0xBB, 0xBF, 0};
 	
-	if(strncmp(pucBufHead, aStrUtf8, 3) == 0){
+	if(strncmp((char *)pucBufHead, aStrUtf8, 3) == 0){
 		return 1;
 	}else{
 		return 0;

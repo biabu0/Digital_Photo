@@ -2,18 +2,18 @@
 #include <page_manager.h>
 #include <string.h>
 
-static PT_PageAction g_ptPageActionrHead;	//结构体链表头部
+static PT_PageAction g_ptPageActionHead;	//结构体链表头部
 
 /*		注册结构体			将结构体加入到链表中取*/
 int RegisterPageAction(PT_PageAction ptPageAction){
 
 	PT_PageAction ptTmp;
 	
-	if(!g_ptPageActionrHead){
-		g_ptPageActionrHead = ptPageAction;
+	if(!g_ptPageActionHead){
+		g_ptPageActionHead = ptPageAction;
 		ptPageAction->ptNext = NULL;
 	}else{
-		ptTmp = g_ptPageActionrHead;
+		ptTmp = g_ptPageActionHead;
 		while(ptTmp->ptNext){
 			ptTmp = ptTmp->ptNext;
 		}
@@ -26,7 +26,7 @@ int RegisterPageAction(PT_PageAction ptPageAction){
 
 void ShowPages(void){
 
-	PT_PageAction ptTmp = g_ptPageActionrHead;
+	PT_PageAction ptTmp = g_ptPageActionHead;
 	int i = 0;
 	
 	while(ptTmp){
@@ -37,9 +37,8 @@ void ShowPages(void){
 
 
 /* 根据名字获取页面结构体 */
-PT_PageAcction Page(char *pcName){
-
-	PT_PageAction ptTmp = g_ptPageActionrHead;
+PT_PageAction Page(char *pcName){
+	PT_PageAction ptTmp = g_ptPageActionHead;
 
 	while(ptTmp){
 		if(strcmp(ptTmp->name, pcName) == 0){
@@ -50,12 +49,14 @@ PT_PageAcction Page(char *pcName){
 	
 	return NULL;
 }
-
+int ID(char *strName){
+	return (int)strName[0] + (int)strName[1] + (int)strName[2] + (int)strName[3];
+}
 
 int PagesInit(void){
 	int iError;
 
-
+	iError = MainPageInit();
 
 	return iError;
 }
