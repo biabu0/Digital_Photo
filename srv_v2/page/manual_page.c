@@ -14,7 +14,8 @@
 #include<input_manager.h>
 #include<file.h>
 #include<string.h>
-
+// 放大/缩小系数 在定义宏的时候要注意()尤其是宏是一个表达式的时候
+#define ZOOM_RATIO (0.9)
 
 // 定义菜单区域的图标布局
 static T_Layout g_atMenuIconsLayout[] = {
@@ -320,12 +321,136 @@ static void ShowManualPage(PT_PageLayout ptPageLayout, char *strFileName){
     PutVideoMem(ptVideoMem);
 }
 
+/**
+ * @brief  为"manual页面"获得输入数据,判断输入事件位于哪一个图标上
+ * 
+ * @param  ptPageLayout - 内含多个图标的显示区域
+ * @param  ptInputEvent - 内含得到的输入数据
+ * @return int  -1     - 输入数据不位于任何一个图标之上
+ *            其他值 - 输入数据所落在的图标(PageLayout->atLayout数组的哪一项)
+ * @author  bia布
+ * @date    2025/06/15
+ * @version 1.0
+ */
+static int ManualPageGetInputEvent(PT_PageLayout ptPageLayout, PT_InputEvent ptInputEvent){
+    return GenericPageGetInputEvent(ptPageLayout, ptInputEvent);
+}
+
+
+
+
+/**
+ * @brief  在"manual页面"中显示经过缩放的图片
+ * 
+ * @param  ptZoomedPicPixelDatas - 内含已经缩放的图片的象素数据
+ * @param  ptVideoMem            - 在这个VideoMem中显示
+ * @return void
+ * 
+ * @author  bia布
+ * @date    2025/06/15
+ * @version 1.0
+ */
+static void ShowZoomedPictureInLayout(PT_PixelDatas ptZoomedPicPixelDatas, PT_VideoMem ptVideoMem){
+    int iStartXofNewPic, iStartYofNewPic;
+    int iStartXofOldPic, iStartYofOldPic;
+    int iWidthPictureInPlay, iHeightPictureInPlay;
+    int iPictureLayoutWidth, iPictureLayoutHeight;
+    int iDeltaX, iDeltaY;
+
+    iPictureLayoutWidth  = g_tManualPictureLayout.iBotRightX - g_tManualPictureLayout.iTopLeftX + 1;
+    iPictureLayoutHeight = g_tManualPictureLayout.iBotRightY - g_tManualPictureLayout.iTopLeftY + 1;
+    
+    /* 显示新数据 */
+    iStartXofNewPic = g_iXofZoomedPicShowInCenter - iPictureLayoutWidth/2;
+    if (iStartXofNewPic < 0)
+    {
+        iStartXofNewPic = 0;
+    }
+    if (iStartXofNewPic > ptZoomedPicPixelDatas->iWidth)
+    {
+        iStartXofNewPic = ptZoomedPicPixelDatas->iWidth;
+    }
+
+    /* 
+     * g_iXofZoomedPicShowInCenter - iStartXofNewPic = PictureLayout中心点X坐标 - iStartXofOldPic
+     */
+    iDeltaX = g_iXofZoomedPicShowInCenter - iStartXofNewPic;
+    iStartXofOldPic = (g_tManualPictureLayout.iTopLeftX + iPictureLayoutWidth / 2) - iDeltaX;
+    if (iStartXofOldPic < g_tManualPictureLayout.iTopLeftX)
+    {
+        iStartXofOldPic = g_tManualPictureLayout.iTopLeftX;
+    }
+    if (iStartXofOldPic > g_tManualPictureLayout.iBotRightX)
+    {
+        iStartXofOldPic = g_tManualPictureLayout.iBotRightX + 1;
+    }
+        
+    if ((ptZoomedPicPixelDatas->iWidth - iStartXofNewPic) > (g_tManualPictureLayout.iBotRightX - iStartXofOldPic + 1))
+        iWidthPictureInPlay = (g_tManualPictureLayout.iBotRightX - iStartXofOldPic + 1);
+    else
+        iWidthPictureInPlay = (ptZoomedPicPixelDatas->iWidth - iStartXofNewPic);
+    
+    iStartYofNewPic = g_iYofZoomedPicShowInCenter - iPictureLayoutHeight/2;
+    if (iStartYofNewPic < 0)
+    {
+        iStartYofNewPic = 0;
+    }
+    if (iStartYofNewPic > ptZoomedPicPixelDatas->iHeight)
+    {
+        iStartYofNewPic = ptZoomedPicPixelDatas->iHeight;
+    }
+
+    /* 
+     * g_iYofZoomedPicShowInCenter - iStartYofNewPic = PictureLayout中心点Y坐标 - iStartYofOldPic
+     */
+    iDeltaY = g_iYofZoomedPicShowInCenter - iStartYofNewPic;
+    iStartYofOldPic = (g_tManualPictureLayout.iTopLeftY + iPictureLayoutHeight / 2) - iDeltaY;
+
+    if (iStartYofOldPic < g_tManualPictureLayout.iTopLeftY)
+    {
+        iStartYofOldPic = g_tManualPictureLayout.iTopLeftY;
+    }
+    if (iStartYofOldPic > g_tManualPictureLayout.iBotRightY)
+    {
+        iStartYofOldPic = g_tManualPictureLayout.iBotRightY + 1;
+    }
+    
+    if ((ptZoomedPicPixelDatas->iHeight - iStartYofNewPic) > (g_tManualPictureLayout.iBotRightY - iStartYofOldPic + 1))
+    {
+        iHeightPictureInPlay = (g_tManualPictureLayout.iBotRightY - iStartYofOldPic + 1);
+    }
+    else
+    {
+        iHeightPictureInPlay = (ptZoomedPicPixelDatas->iHeight - iStartYofNewPic);
+    }
+        
+    ClearVideoMemRegion(ptVideoMem, &g_tManualPictureLayout, COLOR_BACKGROUND);
+    PicMergeRegion(iStartXofNewPic, iStartYofNewPic, iStartXofOldPic, iStartYofOldPic, iWidthPictureInPlay, iHeightPictureInPlay, ptZoomedPicPixelDatas, &ptVideoMem->tPixelDatas);
+
+}
 
 static void ManualPageRun(PT_PageParams ptParentPageParams){
-    
+    // 当前文件的路径
     char strFullPathName[256];
+    // 当前文件所在的目录地址
+    char strDirName[256];
+    char strFileName[256];
+    char *strTmp;
+
+    
+    int iDirContentsNumber;
+    int iError;
+    int iIndex;
+    int iPicFileIndex;
+    int bButtonPressed = 0;
+    int iIndexPressed = -1;
+    int iZoomedWidth;
+    int iZoomedHeight;
+    PT_PixelDatas ptZoomedPicPixelDatas = &g_tZoomedPicPixelDatas;
+    T_InputEvent tInputEvent;
     T_PageParams tPageParams;
     PT_VideoMem ptDevVideoMem;
+    PT_DirContent *aptDirContents;
 
     tPageParams.iPageID = ID("manual");
     
@@ -338,10 +463,135 @@ static void ManualPageRun(PT_PageParams ptParentPageParams){
     DBG_PRINTF("<3>ShowManualPage\n");
     ShowManualPage(&g_tManualPageMenuIconsLayout, strFullPathName);
 
-    // 2.创建Prepare线程
 
-    // 调用GetInputEvent获取输入事件处理
+    // 2. 处理路径信息用于显示其他文件
+    strcpy(strDirName, ptParentPageParams->strCurPicFile);
+    strTmp = strrchr(strDirName, '/');
+    *strTmp = '\0';
+    // 当前文件的名称
+    strcpy(strFileName, strTmp+1);
+    // 获取当前目录下所有文件信息
+    iError = GetDirContents(strDirName, &aptDirContents, &iDirContentsNumber);
+    // 确定当前显示文件的索引
+    for(iPicFileIndex = 0; iPicFileIndex < iDirContentsNumber; iPicFileIndex++){
+        if(0 == strcmp(aptDirContents[iPicFileIndex]->strName, strFileName)){
+            break;
+        }
+    }
+    // 3. 调用GetInputEvent获取输入事件并处理
     while(1){
+        iIndex = ManualPageGetInputEvent(&g_tManualPageMenuIconsLayout, &tInputEvent);
+        if(tInputEvent.iPressure == 0){
+            if(bButtonPressed){
+                ReleaseButton(&g_atMenuIconsLayout[iIndexPressed]);
+                bButtonPressed = 0;
+                switch(iIndexPressed){
+                    case 0://返回
+                    {
+                        return;
+                        break;
+                    }
+                    case 1://缩小
+                    {
+                        iZoomedWidth = (float)g_tZoomedPicPixelDatas.iWidth * ZOOM_RATIO;
+                        iZoomedHeight = (float)g_tZoomedPicPixelDatas.iHeight * ZOOM_RATIO;
+                        ptZoomedPicPixelDatas = GetZoomedPicPixelDatas(&g_tOriginPicPixelDatas, iZoomedWidth, iZoomedHeight);
+                        
+                        g_iXofZoomedPicShowInCenter = (float)g_iXofZoomedPicShowInCenter * ZOOM_RATIO;
+                        g_iYofZoomedPicShowInCenter = (float)g_iYofZoomedPicShowInCenter * ZOOM_RATIO;
+
+                        ShowZoomedPictureInLayout(ptZoomedPicPixelDatas, ptDevVideoMem);
+                        break;
+    
+                    }
+                    case 2: //放大
+                    {
+                        iZoomedWidth = (float)g_tZoomedPicPixelDatas.iWidth / ZOOM_RATIO;
+                        iZoomedHeight = (float)g_tZoomedPicPixelDatas.iHeight / ZOOM_RATIO;
+                        ptZoomedPicPixelDatas = GetZoomedPicPixelDatas(&g_tOriginPicPixelDatas, iZoomedWidth, iZoomedHeight);
+                        
+                        g_iXofZoomedPicShowInCenter = (float)g_iXofZoomedPicShowInCenter / ZOOM_RATIO;
+                        g_iYofZoomedPicShowInCenter = (float)g_iYofZoomedPicShowInCenter / ZOOM_RATIO;
+
+                        ShowZoomedPictureInLayout(ptZoomedPicPixelDatas, ptDevVideoMem);
+                        break;
+                    }
+                    case 3: //上一张
+                    {
+                        while(iPicFileIndex > 0){
+                            iPicFileIndex--;
+                            snprintf(strFullPathName, 256, "%s/%s", strDirName, aptDirContents[iPicFileIndex]->strName);
+                            strFullPathName[255] = '\0';
+                            if(isPictureFileSupported(strFullPathName)){
+                                ShowPictureInManualPage(ptDevVideoMem, strFullPathName);
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case 4: //下一张
+                    {
+                        while(iPicFileIndex < iDirContentsNumber - 1){
+                            iPicFileIndex++;
+                            snprintf(strFullPathName, 256, "%s/%s", strDirName, aptDirContents[iPicFileIndex]->strName);
+                            strFullPathName[255] = '\0';
+                            if(isPictureFileSupported(strFullPathName)){
+                                ShowPictureInManualPage(ptDevVideoMem, strFullPathName);
+                                break;
+                            }
+                        }
+                        break;
+
+                    }
+                    case 5://连播
+                    {
+
+                    }
+                    default:
+                    {
+                        break;
+                    }
+
+                }
+                iIndexPressed = -1;
+            }
+
+        }else{
+            // 菜单栏按钮
+            if(iIndex != -1){
+                if(!bButtonPressed){
+                    bButtonPressed = 1;
+                    iIndexPressed = iIndex;                    
+                    PressButton(&g_atMenuIconsLayout[iIndexPressed]);
+                }
+
+            }else{
+                // 				/* 如果没有按钮被按下 */
+				// if (!bButtonPressed && !bPicSlipping)
+				// {
+				// 	bPicSlipping = 1;
+                //     tPreInputEvent = tInputEvent;
+				// }
+
+				// if (bPicSlipping)
+				// {
+                //     /* 如果触点滑动距离大于规定值, 则挪动图片 */
+                //     if (DistanceBetweenTwoPoint(&tInputEvent, &tPreInputEvent) > SLIP_MIN_DISTANCE)
+                //     {                            
+                //         /* 重新计算中心点 */
+                //         g_iXofZoomedPicShowInCenter -= (tInputEvent.iX - tPreInputEvent.iX);
+                //         g_iYofZoomedPicShowInCenter -= (tInputEvent.iY - tPreInputEvent.iY);
+                        
+                //         /* 显示新数据 */
+                //         ShowZoomedPictureInLayout(ptZoomedPicPixelDatas, ptDevVideoMem);
+                        
+                //         /* 记录滑动点 */
+                //         tPreInputEvent = tInputEvent;                            
+                //     }
+				// }
+
+            }
+        }
     }
 }
 static T_PageAction g_tManualPageAction = {

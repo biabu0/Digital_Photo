@@ -10,4 +10,5 @@ int BMP_Init(void);
 int JPG_Init(void);
 int PicFmtsInit(void);
 PT_PicFileParser Parser(char *pcName);
+
 #endif

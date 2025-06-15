@@ -540,6 +540,7 @@ static void ShowBrowsePage(PT_PageLayout ptPageLayout){
     DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     if (!g_tDirClosedIconPixelDatas.aucPixelDatas)
     {   
+        DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
         GenerateDirAndFileIcons(&g_tBrowsePageDirAndFileLayout);
     }
     DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -553,7 +554,6 @@ static void ShowBrowsePage(PT_PageLayout ptPageLayout){
     // 4. 释放内存块
     PutVideoMem(ptVideoMem);
 }
-
 
 /**
  * @brief  为"浏览页面"获得输入数据,判断输入事件位于哪一个菜单栏图标上
@@ -795,7 +795,7 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                 if(iIndexPressed < DIRFILE_ICON_INDEX_BASE)
                 {
                     bIconPressed    = 0;
-                        if(!(bUsedToSelectDir && (iIndexPressed == 1))){
+                    if(!(bUsedToSelectDir && (iIndexPressed == 1))){
                         DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                         ReleaseButton(&g_atMenuIconsLayout[iIndexPressed]);
                     }
@@ -921,15 +921,18 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                             // 获取文件路径
                             snprintf(tPageParams.strCurPicFile, 256, "%s/%s", g_strCurDir, g_aptDirContents[iDirFileContentIndex]->strName);
                             tPageParams.strCurPicFile[255] = '\0';
-                            DBG_PRINTF("<3>FILETYPE_FILE!\n");
-                            DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            DBG_PRINTF("<5>FILETYPE_FILE!\n");
+                            DBG_PRINTF("<5>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                             if(isPictureFileSupported(tPageParams.strCurPicFile)){
-                                DBG_PRINTF("<3>Enter manual page!\n");
+                                DBG_PRINTF("<5>Enter manual page!\n");
                                 tPageParams.iPageID = ID("browse");
                                 // tPageParams中存放当前文件的路径和上一层的页面ID，显示文件
                                 Page("manual")->Run(&tPageParams);
                                 // 返回回来则继续显示当前浏览界面
+                                DBG_PRINTF("<5>Return from manual page!\n");
+                                //ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
                                 ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
+                                DBG_PRINTF("<5>Return from manual page--->>>ShowBrowsePage!\n");
                             }
 
                         }                        

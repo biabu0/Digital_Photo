@@ -17,5 +17,5 @@ void FreePixelDatasFrmFile(PT_PixelDatas ptPixelDatas);
 int GetPixelDatasFrmFile(char *strFileName, PT_PixelDatas ptPixelDatas);
 int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int iBotRightX, int iBotRightY, unsigned char *pucTextString, PT_VideoMem ptVideoMem);
 int isPictureFileSupported(char *strFileName);
-
+int PicMergeRegion(int iStartXofNewPic, int iStartYofNewPic, int iStartXofOldPic, int iStartYofOldPic, int iWidth, int iHeight, PT_PixelDatas ptNewPic, PT_PixelDatas ptOldPic);
 #endif

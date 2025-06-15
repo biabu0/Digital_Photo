@@ -13,18 +13,6 @@
 // bmp.c中的
 extern T_PicFileParser g_tBMPParser;
 
-// int GetFontPixel(){
-
-// }
-
-// int GetPicturePixel(){
-
-// }
-
-// int DrawPixel(){
-    
-// }
-
 void FlushVideoMemToDev(PT_VideoMem ptVideoMem){
 
     // 获取当前使用的设备
