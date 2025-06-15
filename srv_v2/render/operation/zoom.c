@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
+#include<debug_manager.h>
 
 //缩放算法参考：http://blog.chinaunix.net/uid-22915173-id-2185545.html
 
@@ -14,13 +15,11 @@ int PicZoom(PT_PixelDatas ptOriginPic, PT_PixelDatas ptZoomPic){
     unsigned char *pucSrc;
     unsigned long dwDestWidth = ptZoomPic->iWidth;
     unsigned long* pdwSrcXTable = malloc(sizeof(unsigned long) * dwDestWidth);
-
     if(ptOriginPic->iBpp != ptZoomPic->iBpp){
         printf("ptOriginPic->iBpp: %d\n",ptOriginPic->iBpp);
         printf("ptZoomPic->iBpp: %d\n",ptZoomPic->iBpp);
         return -1;
     }
-
     // 图片中每一列的x元素是一样的，先计算x元素存储起来，这样避免在双重for循环中重复计算x元素
     for (x = 0; x < dwDestWidth; x++){
         pdwSrcXTable[x]=(x * ptOriginPic->iWidth / ptZoomPic->iWidth);
@@ -36,8 +35,9 @@ int PicZoom(PT_PixelDatas ptOriginPic, PT_PixelDatas ptZoomPic){
             memcpy(pucDest + x * dwBytes, pucSrc + pdwSrcXTable[x] * dwBytes, dwBytes);
         }
     }
+   
 
-    free(pdwSrcXTable);
+    free(pdwSrcXTable);    
 
     return 0;
 }

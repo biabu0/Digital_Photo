@@ -73,6 +73,8 @@ static int g_iStartIndex = 0;            /* 在屏幕上显示的第1个"目录�
 
 /* 当前显示的目录 */
 static char g_strCurDir[FILE_NAME_SIZE] = DEFAULT_DIR;
+/* 选择要显示的目录 */
+static char g_strSelectedDir[256] = DEFAULT_DIR;
 
 
 /*
@@ -506,6 +508,7 @@ static void ShowBrowsePage(PT_PageLayout ptPageLayout){
 
     int iError;
     (void)iError;
+    int iX, iY, iB;
 
     PT_VideoMem  ptVideoMem;
     // 获得区域图标
@@ -513,6 +516,10 @@ static void ShowBrowsePage(PT_PageLayout ptPageLayout){
     
     // 1. 获取内存块
     ptVideoMem = GetVideoMem(ID("browse"), 1);
+
+
+    GetDispResolution(&iX, &iY, &iB);
+    ClearRectangleInVideoMem(0, 0, iX, iY, ptVideoMem, COLOR_BACKGROUND);
 
     if(ptVideoMem == NULL){
         DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -523,20 +530,25 @@ static void ShowBrowsePage(PT_PageLayout ptPageLayout){
     // 2. 描画数据
     // iTopLeftX == 0确定当前是否对数据进行描画
     if(aptLayout[0].iTopLeftX == 0){
+        DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
         // 计算菜单数据
         CalcBrowsePageMenusLayout(ptPageLayout);
         // 计算目录和文件布局
         CalcBrowsePageDirAndFilesLayout();
     }
     /* 生成"目录和文件"的图标 */
+    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     if (!g_tDirClosedIconPixelDatas.aucPixelDatas)
     {   
         GenerateDirAndFileIcons(&g_tBrowsePageDirAndFileLayout);
     }
+    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
     iError = GeneratePage(ptPageLayout, ptVideoMem);
+    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     iError = GenerateBrowsePageDirAndFile(g_iStartIndex, g_iDirContentsNumber, g_aptDirContents, ptVideoMem);
     // 3. 刷新到显存上
+    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     FlushVideoMemToDev(ptVideoMem);
     // 4. 释放内存块
     PutVideoMem(ptVideoMem);
@@ -718,6 +730,9 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
     int bIconPressed = 0;
     int iIndexPressed = -1;
     int bUsedToSelectDir = 0;
+    int bHaveClickSelectIcon = 0;
+
+    char *pcTmp;
 
     char strTmp[4096];
     T_PageParams tPageParams;
@@ -735,6 +750,8 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
     PT_VideoMem ptDevVideoMem;
     // 获取显存，直接改变显存内容
     ptDevVideoMem = GetDevVideoMem();
+
+
 
     // 	/* 这两句只是为了避免编译警告 */
 	// tInputEventPrePress.tTime.tv_sec = 0;
@@ -777,58 +794,146 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                 // 菜单栏图标
                 if(iIndexPressed < DIRFILE_ICON_INDEX_BASE)
                 {
-                    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-                    ReleaseButton(&g_atMenuIconsLayout[iIndexPressed]);
-                    bIconPressed = 0;
-                    // switch(iIndex){
-                    //     case 0:
-                    //         DBG_PRINTF("<5> Return Pressed!\n");
-                    // }
+                    bIconPressed    = 0;
+                        if(!(bUsedToSelectDir && (iIndexPressed == 1))){
+                        DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                        ReleaseButton(&g_atMenuIconsLayout[iIndexPressed]);
+                    }
+                    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+
+                    switch(iIndexPressed){
+                        case 0: // 向上
+                        {
+                            DBG_PRINTF("<5>Return Pressed!\n");
+                            if(0 == strcmp(g_strCurDir, "/")){
+                                // 已经是顶层目录，返回到main_page界面
+                                // 释放当前路径下的文件信息
+                                DBG_PRINTF("<5>Top dir!\n");
+                                FreeDirContents(g_aptDirContents, g_iDirContentsNumber);
+                                
+                                //ClearRectangleInVideoMem(0, 0, iXres, iYres, ptDevVideoMem, COLOR_BACKGROUND);
+
+                                return ;
+                            }
+                            pcTmp = strrchr(g_strCurDir, '/');
+                            *pcTmp = '\0';
+                            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            FreeDirContents(g_aptDirContents, g_iDirContentsNumber);
+                            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            iError = GetDirContents(g_strCurDir, &g_aptDirContents, &g_iDirContentsNumber);
+                            if (iError)
+                            {
+                                DBG_PRINTF("<3>GetDirContents error!\n");
+                                return;
+                            }
+                            g_iStartIndex = 0;
+                            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            iError = GenerateBrowsePageDirAndFile(g_iStartIndex, g_iDirContentsNumber, g_aptDirContents, ptDevVideoMem);
+                            
+                            break;                                
+                        }
+                        case 1:     //选择
+                        {
+                            if (!bUsedToSelectDir)
+                            {
+                                /* 如果不是用于"选择目录", 该按钮无用处 */
+                                break;
+                            }
+                            break;
+                        }
+                        case 2:     // 上一页
+                        {
+                            DBG_PRINTF("<7> Up page Pressed!\n");
+                            // 更改当前图标起始位置
+                            g_iStartIndex -= g_iDirFileNumPerCol * g_iDirFileNumPerRow;
+                            if(g_iStartIndex >= 0){
+                                iError = GenerateBrowsePageDirAndFile(g_iStartIndex, g_iDirContentsNumber, g_aptDirContents, ptDevVideoMem);
+                            }else{
+                                g_iStartIndex += g_iDirFileNumPerCol * g_iDirFileNumPerRow;
+                            }
+                            break;
+                        }
+                        case 3:     // 下一页
+                        {
+                            DBG_PRINTF("<7> Next page Pressed!\n");
+                            g_iStartIndex += g_iDirFileNumPerCol * g_iDirFileNumPerRow;
+                            if(g_iStartIndex < g_iDirContentsNumber){
+                                iError = GenerateBrowsePageDirAndFile(g_iStartIndex, g_iDirContentsNumber, g_aptDirContents, ptDevVideoMem);
+                            }else{
+                                g_iStartIndex -= g_iDirFileNumPerCol * g_iDirFileNumPerRow;
+                            }
+                            break;                                
+                        }
+                        default:
+                        {
+                            break;
+                        } 
+                    
+                        
+                    }
                 }else{
                     DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                     // if(iIndexPressed != iIndex){
                     //     // 恢复
                     //     DeSelectDirFileIcon(iIndexPressed - DIRFILE_ICON_INDEX_BASE);
                     //     bIconPressed = 0;   
-                    // }else{// 单击文件进入该文件下的页面
-                    DeSelectDirFileIcon(iIndexPressed - DIRFILE_ICON_INDEX_BASE);
-                    bIconPressed = 0;
-                    iDirFileContentIndex = (iIndexPressed - DIRFILE_ICON_INDEX_BASE) / 2 + g_iStartIndex;
-                    // 如果是目录，进入该目录
-                    if(g_aptDirContents[iDirFileContentIndex]->eFileType == FILETYPE_DIR){
-                        // 更改路径
-                        snprintf(strTmp, 4096, "%s/%s", g_strCurDir, g_aptDirContents[iDirFileContentIndex]->strName);
-                        strTmp[4096 - 1] = '\0';
-                        // copy到当前目录下
-                        strcpy(g_strCurDir, strTmp);
-                        // 释放到之前生成的图标文件等信息
-                        FreeDirContents(g_aptDirContents, g_iDirContentsNumber);
+                    // }
+                    if(bHaveClickSelectIcon){
+                        DeSelectDirFileIcon(iIndexPressed - DIRFILE_ICON_INDEX_BASE);
+                        bIconPressed = 0;
+                        // 选择某个目录
+                        iDirFileContentIndex = g_iStartIndex + (iIndexPressed - DIRFILE_ICON_INDEX_BASE)/2;
+                        if (g_aptDirContents[iDirFileContentIndex]->eFileType == FILETYPE_DIR)
+                        {
+                            ReleaseButton(&g_atMenuIconsLayout[1]);  /* 同时松开"选择按钮" */
+                            bHaveClickSelectIcon = 0;
 
-                        iError = GetDirContents(g_strCurDir, &g_aptDirContents, &g_iDirContentsNumber);
-                        if (iError){
-                            DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-                            DBG_PRINTF("<3>GetDirContents error!\n");
-                            return;
+                            /* 记录目录名 */
+                            snprintf(strTmp, 256, "%s/%s", g_strCurDir, g_aptDirContents[iDirFileContentIndex]->strName);
+                            strTmp[255] = '\0';
+                            strcpy(g_strSelectedDir, strTmp);
                         }
-                        g_iStartIndex = 0;
-                        iError = GenerateBrowsePageDirAndFile(g_iStartIndex, g_iDirContentsNumber, g_aptDirContents, ptDevVideoMem);        
-                    }else if(bUsedToSelectDir == 0){  // 当前不是用于选择目录的，故如果点击文件，单击显示该文件
-                        // 获取文件路径
-                        snprintf(tPageParams.strCurPicFile, 256, "%s/%s", g_strCurDir, g_aptDirContents[iDirFileContentIndex]->strName);
-                        tPageParams.strCurPicFile[255] = '\0';
-                        DBG_PRINTF("<3>FILETYPE_FILE!\n");
-                        DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-                        if(isPictureFileSupported(tPageParams.strCurPicFile)){
-                            DBG_PRINTF("<3>Enter manual page!\n");
-                            tPageParams.iPageID = ID("browse");
-                            // tPageParams中存放当前文件的路径和上一层的页面ID，显示文件
-                            Page("manual")->Run(&tPageParams);
-                            // 返回回来则继续显示当前浏览界面
-                            ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
-                        }
-
                     }
+                    else// 单击文件进入该文件下的页面
+                    {
+                        DeSelectDirFileIcon(iIndexPressed - DIRFILE_ICON_INDEX_BASE);
+                        bIconPressed = 0;
+                        iDirFileContentIndex = (iIndexPressed - DIRFILE_ICON_INDEX_BASE) / 2 + g_iStartIndex;
+                        // 如果是目录，进入该目录
+                        if(g_aptDirContents[iDirFileContentIndex]->eFileType == FILETYPE_DIR){
+                            // 更改路径
+                            snprintf(strTmp, 4096, "%s/%s", g_strCurDir, g_aptDirContents[iDirFileContentIndex]->strName);
+                            strTmp[4096 - 1] = '\0';
+                            // copy到当前目录下
+                            strcpy(g_strCurDir, strTmp);
+                            // 释放到之前生成的图标文件等信息
+                            FreeDirContents(g_aptDirContents, g_iDirContentsNumber);
 
+                            iError = GetDirContents(g_strCurDir, &g_aptDirContents, &g_iDirContentsNumber);
+                            if (iError){
+                                DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                                DBG_PRINTF("<3>GetDirContents error!\n");
+                                return;
+                            }
+                            g_iStartIndex = 0;
+                            iError = GenerateBrowsePageDirAndFile(g_iStartIndex, g_iDirContentsNumber, g_aptDirContents, ptDevVideoMem);        
+                        }else if(bUsedToSelectDir == 0){  // 当前不是用于选择目录的，故如果点击文件，单击显示该文件
+                            // 获取文件路径
+                            snprintf(tPageParams.strCurPicFile, 256, "%s/%s", g_strCurDir, g_aptDirContents[iDirFileContentIndex]->strName);
+                            tPageParams.strCurPicFile[255] = '\0';
+                            DBG_PRINTF("<3>FILETYPE_FILE!\n");
+                            DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            if(isPictureFileSupported(tPageParams.strCurPicFile)){
+                                DBG_PRINTF("<3>Enter manual page!\n");
+                                tPageParams.iPageID = ID("browse");
+                                // tPageParams中存放当前文件的路径和上一层的页面ID，显示文件
+                                Page("manual")->Run(&tPageParams);
+                                // 返回回来则继续显示当前浏览界面
+                                ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
+                            }
+
+                        }                        
+                    }
                 }
             }
             
@@ -842,9 +947,17 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                     // 记录当前按下的状态
                     //tInputEventPrePress = tInputEvent;
                     // 菜单栏图标
-                    if(iIndex < DIRFILE_ICON_INDEX_BASE){
-                        DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-                        PressButton(&g_tBrowsePageMenuIconsLayout.atLayout[iIndex]);
+                                        if(iIndex < DIRFILE_ICON_INDEX_BASE){
+                        if (bUsedToSelectDir)
+                        {
+                            if (!(bHaveClickSelectIcon && (iIndexPressed == 1)))  /* 如果已经按下"选择"按钮, 自然不用再次反转该图标 */
+            					PressButton(&g_atMenuIconsLayout[iIndex]);
+                        }
+                        else
+                        {
+                            if (!bHaveClickSelectIcon)
+            					PressButton(&g_atMenuIconsLayout[iIndex]);
+                        }
                     }else{
                         // 处理按下时候图标的变化
                         DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);

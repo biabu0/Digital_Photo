@@ -28,6 +28,7 @@ static void ShowMainPage(PT_Layout atLayout){
     int iIconY;
     int iXres, iYres, iBpp;
     int iError;
+    int iX, iY, iB;
 
     // 1. 获得内存块
     ptVideoMem = GetVideoMem(ID("main"),  1);
@@ -35,6 +36,9 @@ static void ShowMainPage(PT_Layout atLayout){
         DBG_PRINTF("<3>GetVideoMem error!\n");
         return ;
     }
+
+    GetDispResolution(&iX, &iY, &iB);
+    ClearRectangleInVideoMem(0, 0, iX, iY, ptVideoMem, COLOR_BACKGROUND);
     
   
     // 2. 描画数据，如果内存中的数据已经存在，则直接刷新到显存即可
