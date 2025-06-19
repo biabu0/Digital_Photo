@@ -123,7 +123,6 @@ void ClearVideoMem(PT_VideoMem ptVideoMem, unsigned int dwColor){
  * @note   从BMP文件中提取数据信息，将其缩放到确定的大小，将像素数据合并到内存块中
  * 
  */
-
 int GeneratePage(PT_PageLayout ptPageLayout, PT_VideoMem ptVideoMem){
 
 	T_PixelDatas tIconPixelDatas;
@@ -138,7 +137,7 @@ int GeneratePage(PT_PageLayout ptPageLayout, PT_VideoMem ptVideoMem){
 		ClearVideoMem(ptVideoMem, COLOR_BACKGROUND);
 
         tIconPixelDatas.iBpp = ptPageLayout->iBpp;		
-        tIconPixelDatas.aucPixelDatas = malloc(tIconPixelDatas.iTotalBytes);
+        //tIconPixelDatas.aucPixelDatas = malloc(ptPageLayout->iMaxTotalBytes);
         if(tIconPixelDatas.aucPixelDatas == NULL){
             DBG_PRINTF("<3>tIconPixelDatas.aucPixelDatas malloc error!\n");
             return -1;
@@ -146,44 +145,39 @@ int GeneratePage(PT_PageLayout ptPageLayout, PT_VideoMem ptVideoMem){
         while(atLayout->strIconName){
 
             // 从BMP文件中获得原始像素数据
-			DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
             iError = GetPixelDatasFrmBMP(atLayout->strIconName, &tOriginIconPixelDatas);
             if(iError != 0){
-                DBG_PRINTF("<3>GetPixelDatasFrmBMP error!\n");
+                DBG_PRINTF("<3>GetPixelDatasForIcon %s error!\n", atLayout->strIconName);
+				//free(tIconPixelDatas.aucPixelDatas);
                 return -1;
             }
-			DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
  			tIconPixelDatas.iHeight = atLayout->iBotRightY - atLayout->iTopLeftY + 1;
 			tIconPixelDatas.iWidth  = atLayout->iBotRightX - atLayout->iTopLeftX+ 1;
 			tIconPixelDatas.iLineBytes  = tIconPixelDatas.iWidth * tIconPixelDatas.iBpp / 8;
 			tIconPixelDatas.iTotalBytes = tIconPixelDatas.iLineBytes * tIconPixelDatas.iHeight;
+			tIconPixelDatas.aucPixelDatas = malloc(tIconPixelDatas.iTotalBytes);
 
-            // 将像素数据缩放一下
-			DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);           
+            // 将像素数据缩放一下      
             iError = PicZoom(&tOriginIconPixelDatas, &tIconPixelDatas);
             if(iError != 0){
                 DBG_PRINTF("<3>PicZoom error!\n");
                 return -1;
             }
             // 将像素数据合并到内存块中
-			DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
             iError = PicMerge(atLayout->iTopLeftX, atLayout->iTopLeftY, &tIconPixelDatas, &ptVideoMem->tPixelDatas);
             if(iError != 0){
                 DBG_PRINTF("<3>PicMerge error!\n");
                 return -1;
             }
             // 更新内存状态
-			DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
             FreePixelDatasForIcon(&tOriginIconPixelDatas);
             atLayout++;
         }
-		DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
         free(tIconPixelDatas.aucPixelDatas);
         // 数据描述完成
         ptVideoMem->ePicDataState = PDS_GENERATED;
-		DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
     }
 

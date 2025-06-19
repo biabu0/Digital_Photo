@@ -97,10 +97,8 @@ int GetPixelDatasFrmBMP(char *strFileName, PT_PixelDatas ptPixelDatas)
 	int iXres, iYres, iBpp;
 
 	/* 图标存在 /etc/digitpic/icons */
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 	snprintf(tFileMap.strFileName, 128, "%s/%s", ICON_PATH, strFileName);
 	tFileMap.strFileName[127] = '\0';
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 	iError = MapFile(&tFileMap);
 	if (iError)
 	{
@@ -119,11 +117,9 @@ int GetPixelDatasFrmBMP(char *strFileName, PT_PixelDatas ptPixelDatas)
 		UnMapFile(&tFileMap);
 		return -1;
 	}
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	GetDispResolution(&iXres, &iYres, &iBpp);
 	ptPixelDatas->iBpp = iBpp;
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 	iError =  Parser("bmp")->GetPixelDatas(&tFileMap, ptPixelDatas);
 	if (iError)
 	{
@@ -131,7 +127,6 @@ int GetPixelDatasFrmBMP(char *strFileName, PT_PixelDatas ptPixelDatas)
 		UnMapFile(&tFileMap);
 		return -1;
 	}
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 	UnMapFile(&tFileMap);
 
 	return 0;
@@ -139,7 +134,7 @@ int GetPixelDatasFrmBMP(char *strFileName, PT_PixelDatas ptPixelDatas)
 
 void FreePixelDatasForIcon(PT_PixelDatas ptPixelDatas)
 {
-	g_tBMPParser.FreePixelDatas(ptPixelDatas);
+	Parser("bmp")->FreePixelDatas(ptPixelDatas);
 }
 void FreePixelDatasFrmFile(PT_PixelDatas ptPixelDatas)
 {

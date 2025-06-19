@@ -131,9 +131,11 @@ static int BMPGetPixelDatas (PT_FileMap ptFileMap, PT_PixelDatas ptPixelDatas){
     }
     ptPixelDatas->iWidth = iWidth;
     ptPixelDatas->iHeight = iHeight;
-    //ptPixelDatas->iBpp = iBpp;
-    ptPixelDatas->aucPixelDatas = malloc(iWidth * iHeight * ptPixelDatas->iBpp / 8);
     ptPixelDatas->iLineBytes = iWidth * ptPixelDatas->iBpp / 8;
+    ptPixelDatas->iTotalBytes = ptPixelDatas->iHeight * ptPixelDatas->iLineBytes;
+    //ptPixelDatas->iBpp = iBpp;
+    ptPixelDatas->aucPixelDatas = malloc(ptPixelDatas->iTotalBytes);
+    
     if(NULL == ptPixelDatas->aucPixelDatas){
         return -1;
     }
@@ -159,14 +161,11 @@ static int BMPGetPixelDatas (PT_FileMap ptFileMap, PT_PixelDatas ptPixelDatas){
     return 0;
 }
 static int BMPFreePixelDatas(PT_PixelDatas ptPixelDatas){
-    if (!ptPixelDatas || !ptPixelDatas->aucPixelDatas) {
-        printf("Invalid pointer detected\n");
-        return -1;
-    }
     free(ptPixelDatas->aucPixelDatas);
-
+    ptPixelDatas->aucPixelDatas = NULL;  // 立即置空防重复释放
     return 0;
 }
+
 
 T_PicFileParser g_tBMPParser = {
     .name           = "bmp",
