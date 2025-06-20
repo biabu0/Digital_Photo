@@ -185,7 +185,7 @@ static PT_PixelDatas GetOriginPictureFilePixelDatas(char *strFileName){
  * @version 1.0
  */
 static PT_PixelDatas GetZoomedPicPixelDatas(PT_PixelDatas ptOriginPicPixelDatas, int iZoomedWidth, int iZoomedHeight){
-	int k;
+	float k;
     int iXres, iYres, iBpp;
     
 	GetDispResolution(&iXres, &iYres, &iBpp);
@@ -194,8 +194,11 @@ static PT_PixelDatas GetZoomedPicPixelDatas(PT_PixelDatas ptOriginPicPixelDatas,
         free(g_tZoomedPicPixelDatas.aucPixelDatas);
         g_tZoomedPicPixelDatas.aucPixelDatas = NULL;
     }
+    DBG_PRINTF("ptOriginPicPixelDatas->iHeight: %d\n", ptOriginPicPixelDatas->iHeight);
+    DBG_PRINTF("ptOriginPicPixelDatas->iWidth: %d\n",ptOriginPicPixelDatas->iWidth);
     // 记录尺度
     k = (float)ptOriginPicPixelDatas->iHeight / ptOriginPicPixelDatas->iWidth;
+    DBG_PRINTF("k = %f\n", k);
     g_tZoomedPicPixelDatas.iWidth  = iZoomedWidth;
     g_tZoomedPicPixelDatas.iHeight = iZoomedWidth * k;
     if (g_tZoomedPicPixelDatas.iHeight > iZoomedHeight)
@@ -206,6 +209,13 @@ static PT_PixelDatas GetZoomedPicPixelDatas(PT_PixelDatas ptOriginPicPixelDatas,
     g_tZoomedPicPixelDatas.iBpp        = iBpp;
     g_tZoomedPicPixelDatas.iLineBytes  = g_tZoomedPicPixelDatas.iWidth * g_tZoomedPicPixelDatas.iBpp / 8;
     g_tZoomedPicPixelDatas.iTotalBytes = g_tZoomedPicPixelDatas.iLineBytes * g_tZoomedPicPixelDatas.iHeight;
+    DBG_PRINTF("zoomed pic pixel data size = %d\n", g_tZoomedPicPixelDatas.iTotalBytes);
+    DBG_PRINTF("zoomed pic pixel data line bytes = %d\n", g_tZoomedPicPixelDatas.iLineBytes);
+    DBG_PRINTF("g_tZoomedPicPixelDatas.iHeight = %d\n", g_tZoomedPicPixelDatas.iHeight);
+    DBG_PRINTF("g_tZoomedPicPixelDatas.iWidth = %d\n", g_tZoomedPicPixelDatas.iWidth);
+
+
+
     g_tZoomedPicPixelDatas.aucPixelDatas = malloc(g_tZoomedPicPixelDatas.iTotalBytes);
     if (g_tZoomedPicPixelDatas.aucPixelDatas == NULL)
     {
@@ -236,40 +246,37 @@ static int ShowPictureInManualPage(PT_VideoMem ptVideoMem, char *strFileName){
     int iTopLeftX, iTopLeftY;
     PT_PixelDatas ptOriginPicPixelDatas;
     PT_PixelDatas ptZoomedPicPixelDatas;
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     // 1. 打开文件，获取文件信息
     ptOriginPicPixelDatas = GetOriginPictureFilePixelDatas(strFileName);
+    // GetPixelDatasFrmFile(strFileName, &g_tOriginPicPixelDatas);
+    // ptOriginPicPixelDatas = &g_tOriginPicPixelDatas;
+
+
     if (!ptOriginPicPixelDatas)
     {
         DBG_PRINTF("<3>GetOriginPictureFilePixelDatas error!\n");
         return -1;
     }
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-    DBG_PRINTF("<7>g_tOriginPicPixelDatas.iTotalBytes:%d\n", g_tOriginPicPixelDatas.iTotalBytes);
+    DBG_PRINTF("<6>g_tOriginPicPixelDatas.iTotalBytes:%d\n", g_tOriginPicPixelDatas.iTotalBytes);
     // 2. 缩放到指定大小
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     iPicLayoutWidth = g_tManualPictureLayout.iBotRightX - g_tManualPictureLayout.iTopLeftX + 1;
     iPicLayoutHeight = g_tManualPictureLayout.iBotRightY - g_tManualPictureLayout.iTopLeftY + 1;
     ptZoomedPicPixelDatas = GetZoomedPicPixelDatas(&g_tOriginPicPixelDatas, iPicLayoutWidth, iPicLayoutHeight);
+    DBG_PRINTF("iTotalBytes: %d\n", ptZoomedPicPixelDatas->iTotalBytes);
     if (!ptZoomedPicPixelDatas)
     {
         return -1;
     }
     // 3. 刷新到内存块
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     iTopLeftX = g_tManualPictureLayout.iTopLeftX + (iPicLayoutWidth - ptZoomedPicPixelDatas->iWidth) / 2;
     iTopLeftY = g_tManualPictureLayout.iTopLeftY + (iPicLayoutHeight - ptZoomedPicPixelDatas->iHeight) / 2;
     g_iXofZoomedPicShowInCenter = ptZoomedPicPixelDatas->iWidth / 2;
     g_iYofZoomedPicShowInCenter = ptZoomedPicPixelDatas->iHeight / 2;
 
     // 显示之前先清空数据区域
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     ClearVideoMemRegion(ptVideoMem, &g_tManualPictureLayout, COLOR_BACKGROUND);
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     DBG_PRINTF("iTotalBytes: %d\n", ptZoomedPicPixelDatas->iTotalBytes);
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     PicMerge(iTopLeftX, iTopLeftY, ptZoomedPicPixelDatas, &ptVideoMem->tPixelDatas);
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     return 0;
 }
 

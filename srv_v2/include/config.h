@@ -34,4 +34,7 @@
 
 #define DEFAULT_DIR "/"
 
+#define DEFAULT_DIR_PIC "/etc/picture/big_pic"
+
+
 #endif /* _CONFIG_H */

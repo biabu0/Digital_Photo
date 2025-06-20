@@ -41,16 +41,12 @@ void ShowPages(void){
 /* 根据名字获取页面结构体 */
 PT_PageAction Page(char *pcName){
 	PT_PageAction ptTmp = g_ptPageActionHead;
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 	while(ptTmp){
 		if(strcmp(ptTmp->name, pcName) == 0){
-			DBG_PRINTF("<3>ptTmp.name: %s", ptTmp->name);
 			return ptTmp;
 		}
 		ptTmp = ptTmp->ptNext;
 	}
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-	
 	return NULL;
 }
 int ID(char *strName){
@@ -238,12 +234,30 @@ int GenericPageGetInputEvent(PT_PageLayout ptPageLayout, PT_InputEvent ptInputEv
     return -1;
 }
 
+
+
+/**
+ * @brief  获得页面的配置参数,
+ *            对于连续播放页面,它需要得到2个参数:播放哪个目录下的图片,图片之间的播放间隔
+ * @param  ptPageCfg - 内含得到的参数
+ * @return void
+ * 
+ * @author  bia布
+ * @date    2025/06/19
+ * @version 1.0
+ */
+void GetPageCfg(PT_PageCfg ptPageCfg){
+    GetSelectedDir(ptPageCfg->strSeletedDir);
+    GetIntervalTime(&ptPageCfg->iIntervalSecond);
+}
+
 int PagesInit(void){
 	int iError;
 
 	iError = MainPageInit();
 	iError = BrowsePageInit();
 	iError = ExplorePageInit();
+	iError = AutoPageInit();
 	return iError;
 }
 

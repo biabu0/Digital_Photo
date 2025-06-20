@@ -11,6 +11,9 @@
 #include <string.h>
 
 
+//为避免访问的目录互相嵌套, 设置能访问的目录深度为10
+#define MAX_DIR_DEEPNESS 10
+
 /**
  * @brief  使用mmap函数映射一个文件到内存,以后就可以直接通过内存来访问文件
  * 
@@ -80,16 +83,12 @@ void UnMapFile(PT_FileMap ptFileMap){
         DBG_PRINTF("Invalid PT_FileMap pointer\n");
         return;
     }
-
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     
     // 先检查指针再操作
     if (ptFileMap->pucFileMapMem != NULL) {
         munmap(ptFileMap->pucFileMapMem, ptFileMap->iFileSize);
         ptFileMap->pucFileMapMem = NULL; // 防止野指针
     }
-
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     
     // 单次关闭文件指针
     // if (ptFileMap->tFp != NULL) {
@@ -138,18 +137,49 @@ static int isDir(char *strFilePath, char *strFileName){
 }
 
 
-/**********************************************************************
- * 函数名称： isDir
- * 功能描述： 判断一个文件是否为目录：使用stat获取文件属性，文件类型信息包含在stat结构的st_mode中，使用宏即可确定文件类型
- * 输入参数： strFilePath - 文件的路径
- *            strFileName - 文件的名字
- * 输出参数： 无
- * 返 回 值： 0 - 不是目录
- *            1 - 是目录
- * 修改日期        版本号     修改人	      修改内容
- * -----------------------------------------------
- * 2025/06/06	     V1.0	  baibu	      创建
- ***********************************************************************/
+/**
+ * @brief  判断一个目录是否常规的目录,在本程序中把sbin等目录当作特殊目录来对待
+ * 
+ * @param  strDirPath    - 目录的路径
+ * @param  strSubDirName - 目录的名字
+ * @return int  0 - 不是常规目录
+ *            1 - 是常规目录
+ * @note   当父目录是根目录的时候进行检查，用于跳过系统目录，可以防止程序误操作关键的系统目录
+ * 
+ * @author  bia布
+ * @date    2025/06/20
+ * @version 1.0
+ */
+static int isRegDir(char *strDirPath, char *strSubDirName)
+{
+    static const char *astrSpecailDirs[] = {"sbin", "bin", "usr", "lib", "proc", "tmp", "dev", "sys", NULL};
+    int i = 0;
+    
+    /* 如果目录名含有"astrSpecailDirs"中的任意一个, 则返回0 */
+    if (0 == strcmp(strDirPath, "/"))
+    {
+        while (astrSpecailDirs[i])
+        {
+            if (0 == strcmp(strSubDirName, astrSpecailDirs[i]))
+                return 0;
+            i++;
+        }
+    }
+    return 1;    
+}
+
+/**
+ * @brief  判断一个文件是否常规的文件,设备节点/链接文件/FIFO文件等是特殊文件
+ * 
+ * @param  strFilePath - 文件的路径
+ * @param  strFileName - 文件的名字
+ * @return int  0 - 不是常规文件
+ *            1 - 是常规文件
+ * 
+ * @author  bia布
+ * @date    2025/06/6
+ * @version 1.0
+ */
 static int isRegFile(char *strFilePath, char *strFileName)
 {
     char strTmp[FILE_NAME_SIZE];
@@ -295,3 +325,91 @@ void FreeDirContents(PT_DirContent *aptDirContents, int iNumber){
 	}
 	free(aptDirContents);
 }
+
+/**
+ * @brief  以深度优先的方式获得目录下的文件 
+ *         即: 先获得顶层目录下的文件, 再进入一级子目录A
+ *         再获得一级子目录A下的文件, 再进入二级子目录AA, ...
+ *         处理完一级子目录A后, 再进入一级子目录B
+ *
+ * "连播模式"下调用该函数获得要显示的文件
+ * 有两种方法获得这些文件:
+ * 1. 事先把所有文件的名字保存到某个缓冲区中
+ * 2. 用到时再去搜索取出若干个文件名
+ * 第1种方法比较简单,但是当文件很多时有可能导致内存不足.
+ * 我们使用第2种方法:
+ * 
+ * @param    strDirName            : 要获得哪个目录下的内容 
+ *           piStartNumberToRecord : 从第几个文件开始取出它们的名字
+ *           iFileCountTotal       : 总共要取出多少个文件的名字
+ *           piFileCountHaveGet    : 已经得到了多少个文件的名字
+ *           apstrFileNames[][256] : 用来存储搜索到的文件名
+ *           piCurFileNumber       : 当前搜索到的文件编号
+ * @return 0 - 成功
+ *           1 - 失败
+ * @note    一个递归遍历目录并收集文件路径的功能，它从指定目录开始，按顺序记录文件路径到提供的数组中，
+ *          支持从指定位置开始记录、限制收集总数，并能递归处理子目录，使用静态变量跟踪目录深度防止栈溢出
+ * 
+ * @author  bia布
+ * @date    2025/06/20
+ * @version 1.0
+ */
+int GetFilesIndir(char *strDirName, int *piStartNumberToRecord, int *piCurFileNumber, int *piFileCountHaveGet, int iFileCountTotal, char apstrFileNames[][256]){
+    
+    PT_DirContent *aptDirContents;  /* 数组:存有目录下"顶层子目录","文件"的名字 */
+    
+    static int iDirDeepness = 0;
+    int iDirCountNumber;
+    int iError;
+    char strSubDirName[256];
+
+    if (iDirDeepness > MAX_DIR_DEEPNESS){
+        return -1;
+    }
+
+    iDirDeepness++; 
+
+    iError = GetDirContents(strDirName, &aptDirContents, &iDirCountNumber);
+    if (iError){
+        DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+        DBG_PRINTF("<3>GetDirContents error!\n");
+        iDirDeepness--;
+        return -1;
+    }
+
+    for(int i = 0; i < iDirCountNumber; i++){
+        if(aptDirContents[i]->eFileType == FILETYPE_FILE){
+            if(*piCurFileNumber >= *piStartNumberToRecord){
+                snprintf(apstrFileNames[*piFileCountHaveGet], 256, "%s/%s", strDirName, aptDirContents[i]->strName);
+                (*piFileCountHaveGet)++;
+                (*piCurFileNumber)++;
+                (*piStartNumberToRecord)++;
+                // 得到文件名后，判断是否已经达到文件总数，是则返回
+                if(*piFileCountHaveGet >= iFileCountTotal){
+                    FreeDirContents(aptDirContents, iDirCountNumber);
+                    iDirDeepness--;
+                    return 0;
+                }
+            }else{
+                (*piCurFileNumber)++;
+            }
+        }
+    }
+
+    for(int i = 0; i < iDirCountNumber; i++){
+        if((aptDirContents[i]->eFileType == FILETYPE_DIR) && isRegDir(strDirName, aptDirContents[i]->strName)){
+            snprintf(strSubDirName, 256, "%s/%s", strDirName, aptDirContents[i]->strName);
+            GetFilesIndir(strSubDirName, piStartNumberToRecord, piCurFileNumber, piFileCountHaveGet, iFileCountTotal, apstrFileNames);
+            if(*piFileCountHaveGet >= iFileCountTotal){
+                FreeDirContents(aptDirContents, iDirCountNumber);
+                iDirDeepness--;
+                return 0;
+            }
+        }
+    }
+
+    FreeDirContents(aptDirContents, iDirCountNumber);
+    iDirDeepness--;
+    return 0;
+}
+

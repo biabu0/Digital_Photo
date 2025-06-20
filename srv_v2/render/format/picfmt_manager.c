@@ -56,11 +56,8 @@ PT_PicFileParser Parser(char *pcName)
 	
 	while (ptTmp)
 	{
-        DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 		if (strcmp(ptTmp->name, pcName) == 0)
 		{
-            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-            DBG_PRINTF("<7>ptTmp: %s\n", ptTmp->name);
 			return ptTmp;
 		}
 		ptTmp = ptTmp->ptNext;

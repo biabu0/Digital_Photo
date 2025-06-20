@@ -74,7 +74,7 @@ static int g_iStartIndex = 0;            /* 在屏幕上显示的第1个"目录�
 /* 当前显示的目录 */
 static char g_strCurDir[FILE_NAME_SIZE] = DEFAULT_DIR;
 /* 选择要显示的目录 */
-static char g_strSelectedDir[256] = DEFAULT_DIR;
+static char g_strSelectedDir[256] = DEFAULT_DIR_PIC;
 
 
 /*
@@ -709,6 +709,14 @@ static void DeSelectDirFileIcon(int iDirFileIndex){
     }
 }
 
+
+
+
+void GetSelectedDir(char *strSeletedDir)
+{
+    strncpy(strSeletedDir, g_strSelectedDir, 256);
+    strSeletedDir[255] = '\0';
+}
 
 /**
  * @brief  "浏览页面"的运行函数: 显示菜单图标,显示目录内容,读取输入数据并作出反应

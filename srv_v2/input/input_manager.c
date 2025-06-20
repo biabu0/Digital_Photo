@@ -82,6 +82,7 @@ int GetInputEvent(PT_InputEvent ptInputEvent){
     /* 被唤醒后，返回数据 */
     *ptInputEvent = g_tInputEvent;
     pthread_mutex_unlock(&g_tMutex);
+    DBG_PRINTF(APP_DEBUG, "GetInputEvent: %d %d %d %d %d %d\n", ptInputEvent->iKey, ptInputEvent->iPressure, ptInputEvent->iType, ptInputEvent->iVal, ptInputEvent->iX, ptInputEvent->iY);
     return 0;
 }
 

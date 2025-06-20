@@ -44,7 +44,6 @@ static void ShowMainPage(PT_Layout atLayout){
     // 2. 描画数据，如果内存中的数据已经存在，则直接刷新到显存即可
     
     if(ptVideoMem->ePicDataState != PDS_GENERATED){
-        DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
         GetDispResolution(&iXres, &iYres, &iBpp);
         iIconHeight = iYres * 2 / 10;
         iIconWidth = iIconHeight * 2;
@@ -61,7 +60,6 @@ static void ShowMainPage(PT_Layout atLayout){
             DBG_PRINTF("<3>tIconPixelDatas.aucPixelDatas malloc error!\n");
             return ;
         }
-        DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
         while(atLayout->strIconName){
             atLayout->iTopLeftX = iIconX;
             atLayout->iTopLeftY = iIconY;
@@ -69,7 +67,6 @@ static void ShowMainPage(PT_Layout atLayout){
             atLayout->iBotRightY = iIconY + iIconHeight - 1;
             
             // 从BMP文件中获得原始像素数据
-            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
             iError = GetPixelDatasFrmBMP(atLayout->strIconName, &tOriginIconPixelDatas);
             if(iError != 0){
@@ -77,27 +74,23 @@ static void ShowMainPage(PT_Layout atLayout){
                 return ;
             }
             // 将像素数据缩放一下
-            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
             iError = PicZoom(&tOriginIconPixelDatas, &tIconPixelDatas);
             if(iError != 0){
                 DBG_PRINTF("<3>PicZoom error!\n");
                 return ;
             }
-            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
             // 将像素数据合并到内存块中
             iError = PicMerge(iIconX, iIconY, &tIconPixelDatas, &ptVideoMem->tPixelDatas);
             if(iError != 0){
                 DBG_PRINTF("<3>PicMerge error!\n");
                 return ;
             }
-            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
             // 更新内存状态
             FreePixelDatasForIcon(&tOriginIconPixelDatas);
             atLayout++;
             iIconY += iYres * 3 / 10;
 
         }
-        DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
         free(tIconPixelDatas.aucPixelDatas);
         // 数据描述完成
         ptVideoMem->ePicDataState = PDS_GENERATED;
@@ -105,17 +98,14 @@ static void ShowMainPage(PT_Layout atLayout){
     }
 
     // 3. 刷新到数据上
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     FlushVideoMemToDev(ptVideoMem);
 
     // 4. 释放内存块
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     PutVideoMem(ptVideoMem);
 
 }
 
 static void MainPageRun(PT_PageParams ptParentParams){
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     int iIndex;
     T_InputEvent tInputEvent;
     // b:bool布尔类型
@@ -123,12 +113,9 @@ static void MainPageRun(PT_PageParams ptParentParams){
     int iIndexPressed = -1;
 
     T_PageParams tPageParams;
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     tPageParams.iPageID = ID("main");
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     // 1.显示main_page界面
     ShowMainPage(g_atMainPageLayout);
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
     // 2.创建Prepare线程：用户可能会停顿部分时间，在这段时间将可能得下一个页面准备好，便于快速切换，流畅
 
@@ -152,14 +139,17 @@ static void MainPageRun(PT_PageParams ptParentParams){
                     //  根据id顺序调用相应的页面
                 switch(iIndexPressed){
                     case 0:
-                        DBG_PRINTF("<5> Browse Page!\n");
+                        DBG_PRINTF("<5> Browse Page Running!\n");
                         Page("browse")->Run(&tPageParams);
                         // 如果返回，则继续显示当前页面
                         ShowMainPage(g_atMainPageLayout);
                         break;
                     case 1:
-                        // Page("auto")->Run();
-                        // ShowMainPage(g_atMainPageLayout);
+                        DBG_PRINTF("<5> Auto Page Running!\n");
+                        // 将初始路径设置为空，表示从默认路径开始播放
+                        tPageParams.strCurPicFile[0] = '\0';
+                        Page("auto")->Run(&tPageParams);
+                        ShowMainPage(g_atMainPageLayout);
                         break;
                     case 2:
                         // Page("setting")->Run();
@@ -174,14 +164,10 @@ static void MainPageRun(PT_PageParams ptParentParams){
             }
         }else{
             if(iIndex != -1){
-                DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                 // 未曾按下按钮
                 if(!bPressed){
                     bPressed = 1;
-                    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                     iIndexPressed = iIndex;
-                    DBG_PRINTF("<7>iIndex: %d\n", iIndex);
-                    DBG_PRINTF("<7>iIndexPressed: %d\n", iIndexPressed);
                     
                     PressButton(&g_atMainPageLayout[iIndexPressed]);
 

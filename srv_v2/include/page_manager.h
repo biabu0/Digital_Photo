@@ -32,6 +32,16 @@ typedef struct PageAction{
     struct PageAction *ptNext;
 }T_PageAction, *PT_PageAction;
 
+
+
+
+// 页面配置信息
+typedef struct PageCfg {
+    int iIntervalSecond;      /* 连播模式下图片的显示间隔 */
+    char strSeletedDir[256];  /* 连播模式下要显示哪个目录下的图片 */ 
+}T_PageCfg, *PT_PageCfg;
+
+
 // 通过字符串确定ID
 //#define ID(name) (int(name[0]) + int(name[1]) + int(name[2]) + int(name[3]))
 
@@ -42,8 +52,11 @@ int BrowsePageInit(void);
 void ShowPages(void);
 int PagesInit(void);
 int ExplorePageInit(void);
+int AutoPageInit(void);
 PT_PageAction Page(char *pcName);
 int GeneratePage(PT_PageLayout ptPageLayout, PT_VideoMem ptVideoMem);
 int GenericPageGetInputEvent(PT_PageLayout ptPageLayout, PT_InputEvent ptInputEvent);
-
+void GetPageCfg(PT_PageCfg ptPageCfg);
+void GetSelectedDir(char *strSeletedDir);
+void GetIntervalTime(int *piIntervalSecond);
 #endif

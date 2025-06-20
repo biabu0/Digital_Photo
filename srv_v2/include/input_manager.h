@@ -21,6 +21,7 @@ typedef struct InputEvent{
     int iY;
     int iKey;       //按键类的值
     int iPressure;   //触摸屏的压力值，按下为1，松开为0
+    int iVal;
 } T_InputEvent, *PT_InputEvent;
 
 typedef struct InputOpr{
@@ -42,5 +43,6 @@ int ShowInputOpr(void);
 int GetInputEvent(PT_InputEvent ptInputEvent);
 int TouchScreenInit(void);
 int StdinInit(void);
+int SlipGetInputEvent(PT_InputEvent ptInputEvent);
 
 #endif
