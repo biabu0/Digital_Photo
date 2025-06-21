@@ -258,6 +258,8 @@ int PagesInit(void){
 	iError = BrowsePageInit();
 	iError = ExplorePageInit();
 	iError = AutoPageInit();
+	iError = SettingPageInit();
+	iError = IntervalPageInit();
 	return iError;
 }
 

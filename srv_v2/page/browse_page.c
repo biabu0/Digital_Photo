@@ -847,6 +847,13 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                                 /* 如果不是用于"选择目录", 该按钮无用处 */
                                 break;
                             }
+                            if(!bHaveClickSelectIcon){
+                                bHaveClickSelectIcon = 1;
+                            }else{
+                                ReleaseButton(&g_atMenuIconsLayout[iIndexPressed]);
+                                bIconPressed    = 0;
+                                bHaveClickSelectIcon = 0;
+                            }
                             break;
                         }
                         case 2:     // 上一页
@@ -958,7 +965,7 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                     // 记录当前按下的状态
                     //tInputEventPrePress = tInputEvent;
                     // 菜单栏图标
-                                        if(iIndex < DIRFILE_ICON_INDEX_BASE){
+                    if(iIndex < DIRFILE_ICON_INDEX_BASE){
                         if (bUsedToSelectDir)
                         {
                             if (!(bHaveClickSelectIcon && (iIndexPressed == 1)))  /* 如果已经按下"选择"按钮, 自然不用再次反转该图标 */

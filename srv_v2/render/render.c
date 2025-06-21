@@ -102,18 +102,18 @@ int GetPixelDatasFrmBMP(char *strFileName, PT_PixelDatas ptPixelDatas)
 	iError = MapFile(&tFileMap);
 	if (iError)
 	{
-		DBG_PRINTF("MapFile %s error!\n", strFileName);
+		DBG_PRINTF("<3>MapFile %s error!\n", strFileName);
 		return -1;
 	}
 	if (tFileMap.pucFileMapMem == NULL) {
-    	DBG_PRINTF("Error: File memory map is NULL!\n");
+    	DBG_PRINTF("<3>Error: File memory map is NULL!\n");
     	return -1;
 	}
 
 	iError = Parser("bmp")->isSupport(&tFileMap);
 	if (iError == 0)
 	{
-		DBG_PRINTF("%s is not bmp file\n", strFileName);
+		DBG_PRINTF("<3>%s is not bmp file\n", strFileName);
 		UnMapFile(&tFileMap);
 		return -1;
 	}
@@ -123,7 +123,7 @@ int GetPixelDatasFrmBMP(char *strFileName, PT_PixelDatas ptPixelDatas)
 	iError =  Parser("bmp")->GetPixelDatas(&tFileMap, ptPixelDatas);
 	if (iError)
 	{
-		DBG_PRINTF("GetPixelDatas for %s error!\n", strFileName);
+		DBG_PRINTF("<3>GetPixelDatas for %s error!\n", strFileName);
 		UnMapFile(&tFileMap);
 		return -1;
 	}
@@ -304,7 +304,7 @@ static int MergeOneFontToVideoMem(PT_FontBitMap ptFontBitMap, PT_VideoMem ptVide
 	}
 	else
 	{
-		DBG_PRINTF("ShowOneFont error, can't support %d bpp\n", ptFontBitMap->iBpp);
+		DBG_PRINTF("<3>ShowOneFont error, can't support %d bpp\n", ptFontBitMap->iBpp);
 		return -1;
 	}
 	return 0;
@@ -363,7 +363,7 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
 			/* 字符串结束 */
 			if (!bHasGetCode)
 			{
-				DBG_PRINTF("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+				DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 				return -1;
 			}
 			else
@@ -401,8 +401,8 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
 		}
 		else
 		{
-            DBG_PRINTF("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-			DBG_PRINTF("GetFontBitmap for calc width/height error!\n");
+            DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+			DBG_PRINTF("<3>GetFontBitmap for calc width/height error!\n");
 		}
 	}	
 	iWidth  = iMaxX - iMinX;
@@ -417,7 +417,7 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
     /* 如果字符串过高 */
 	if (iHeight > iBotRightY - iTopLeftY)
 	{
-		DBG_PRINTF("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+		DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 		//DBG_PRINTF("iHeight = %d, iBotRightY - iTopLeftX = %d - %d = %d\n", iHeight, iBotRightY, iTopLeftY, iBotRightY - iTopLeftY);
 		return -1;
 	}
@@ -450,7 +450,7 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
 			/* 字符串结束 */
 			if (!bHasGetCode)
 			{
-				DBG_PRINTF("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+				DBG_PRINTF("<3>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 				return -1;
 			}
 			else
@@ -472,7 +472,7 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
             {
     			if (MergeOneFontToVideoMem(&tFontBitMap, ptVideoMem))
     			{
-    				DBG_PRINTF("MergeOneFontToVideoMem error for code 0x%x\n", dwCode);
+    				DBG_PRINTF("<3>MergeOneFontToVideoMem error for code 0x%x\n", dwCode);
     				return -1;
     			}
             }
@@ -487,7 +487,7 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
 		}
 		else
 		{
-			DBG_PRINTF("GetFontBitmap for drawing error!\n");
+			DBG_PRINTF("<3>GetFontBitmap for drawing error!\n");
 		}
 	}
 
@@ -525,7 +525,6 @@ int isPictureFileSupported(char *strFileName){
 	UnMapFile(&tFileMap);
 	return 1;
 }
-
 void PressButton(PT_Layout ptLayout){
     InvertButton(ptLayout);
 }

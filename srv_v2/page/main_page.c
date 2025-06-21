@@ -118,7 +118,7 @@ static void MainPageRun(PT_PageParams ptParentParams){
     ShowMainPage(g_atMainPageLayout);
 
     // 2.创建Prepare线程：用户可能会停顿部分时间，在这段时间将可能得下一个页面准备好，便于快速切换，流畅
-
+    DBG_PRINTF("<5> Main Page Running!\n");
     // 调用GetInputEvent获取输入事件处理
     
     while(1){
@@ -152,8 +152,9 @@ static void MainPageRun(PT_PageParams ptParentParams){
                         ShowMainPage(g_atMainPageLayout);
                         break;
                     case 2:
-                        // Page("setting")->Run();
-                        // ShowMainPage(g_atMainPageLayout);
+                        DBG_PRINTF("<5> Setting Page Running!\n");
+                        Page("setting")->Run(&tPageParams);
+                        ShowMainPage(g_atMainPageLayout);
                         break;
                     default:
                         break;

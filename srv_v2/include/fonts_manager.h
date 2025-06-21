@@ -7,8 +7,8 @@ typedef struct FontBitMap {
 	int iYTop;
 	int iXMax;
 	int iYMax;
-	int iBpp;		// 娴ｅ秴娴樻稉顓犳畱閸嶅繒绀岀悰銊с仛閺傝纭堕敍灞煎▏閻€劋绔存担宥堛€冪粈杞扮娑擃亜鍎氱槐鐘虹箷閺勵垯绔存稉顏勭摟閼哄倽銆冪粈杞扮娑擃亜鍎氶敓锟�?
-	int iPitch;   	// 鐠恒劌瀹抽敍灞筋嚠娴滃骸宕熼懝韫秴閸ユ拝绱濇稉銈堫攽閸嶅繒绀屾稊瀣？閻ㄥ嫯娉曢敓锟�?,鐞涖劎銇氶垾灞藉礋閼硅弓缍呴崶閿偓灞艰厬閻╂悂鍋︽稉銈堫攽閸嶅繒绀岄弫鐗堝祦閸︺劌鍞寸€涙ü鑵戦惃鍕ㄢ偓灞界摟閼哄倸浜哥粔濠氬櫤
+	int iBpp;		// 婵炶揪绲界粔鏉懨瑰Ο鑽も枖妞ゆ挾濮甸悾閬嶆煕瀹ュ懐绠崇紒鈧畝鈧幃浼村Ω瑜嬫禒娑㈡煛閸屾繍娼愮痪顓炵埣閺佸秶浠﹂悡搴樻瀼闂佺儵鍋撻崝瀣博鐎涙ɑ濯寸€广儱鐗勯埀顒€鍟扮划鍫熸姜閹殿噮浼囨繛鎴炴惄娴滄粓宕曞杈潟闁绘ǹ娅ｇ粻鐑芥煛閸曢潧鐏熺紒鏂跨摠缁嬪顢旈崟顓熸喕闂佺厧鎼崐浠嬪Υ閸愵亞鐭嗛弶鐐村椤忓崬鈽夐幙鍐х盎闁稿孩宀搁弫鎾绘晸閿燂拷?
+	int iPitch;   	// 闁荤姵浜介崝宀€鈧濞婇弫宥囦沪缁涘娈告繛瀛樼矊妤犵ǹ鐣烽悢鍏煎殞闂婎偒鍘剧粔鎾煕閵夛附瀚曠紒杈ㄧ箖缁嬪濡堕崼顐ｆ杸闂佺ǹ绉寸换鎺旂矆鐏炲墽鈻曢悗锝庡枟閿涚喖鏌ｉ妸銉ヮ伂婵炲娲熼弫鎾绘晸閿燂拷?,闁荤偞绋忛崝搴ㄥΦ濮樿泛鐏抽悘鐐舵缁€瀣煠绾懎绱︾紓宥呮嚇瀹曞爼鏌ㄩ妤€浜鹃悘鐐跺閸橆剟鏌ｉ埡鍌涘€愰柛瀣堕檮缁嬪濡堕崼顐ｆ杸闂佺ǹ绉寸换鎺旂矆瀹€鍕瀬闁绘鐗嗙粊锕傛煕閿斿搫濡奸柛鐐差嚟閳ь剚绋掔湁闁煎灚鍨块幆鍐礋閵娿垹浜鹃悘鐐垫櫕閹界喖鏌ら崫鍕偓鍛婄閸濄儳鐭撳┑鐘宠壘濞咃拷
 	int iCurOriginX;
 	int iCurOriginY;
 	int iNextOriginX;
@@ -20,6 +20,7 @@ typedef struct FontOpr {
 	char *name;
 	int (*FontInit)(char *pcFontFile, unsigned int dwFontSize);
 	int (*GetFontBitmap)(unsigned int dwCode, PT_FontBitMap ptFontBitMap);
+	void (*SetFontSize) (unsigned int dwFontSize);
 	struct FontOpr *ptNext;
 }T_FontOpr, *PT_FontOpr;
 
@@ -31,6 +32,6 @@ int FreeTypeInit(void);
 PT_FontOpr GetFontOpr(char *pcName);
 int GetFontBitmap(unsigned int dwCode, PT_FontBitMap ptFontBitMap);
 int SetFontsDetail(char *pcFontsName, char *pcFontsFile, unsigned int dwFontSize);
-
+void SetFontSize(unsigned int dwFontSize);
 #endif /* _FONTS_MANAGER_H */
 

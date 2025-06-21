@@ -84,6 +84,34 @@ int SetFontsDetail(char *pcFontsName, char *pcFontsFile, unsigned int dwFontSize
 
 
 
+/**
+ * @brief  设置字符的尺寸(单位:色素)
+ * 
+ * @param  dwFontSize - 字符的尺寸(单位:色素)
+ * @return void  
+ * @note    
+ * 
+ * @author  bia布
+ * @date    2025/06/21
+ * @version 1.0
+ */
+void SetFontSize(unsigned int dwFontSize)
+{
+	PT_FontOpr ptTmp = g_ptFontOprHead;
+	
+	g_dwFontSize = dwFontSize;
+
+	while (ptTmp)
+	{
+		if (ptTmp->SetFontSize)
+		{
+			ptTmp->SetFontSize(dwFontSize);
+		}
+		ptTmp = ptTmp->ptNext;
+	}
+}
+
+
 int FontsInit(void){
 	int iError;
 	iError = FreeTypeInit();

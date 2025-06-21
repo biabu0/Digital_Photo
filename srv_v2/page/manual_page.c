@@ -552,7 +552,14 @@ static void ManualPageRun(PT_PageParams ptParentPageParams){
                     }
                     case 5://连播
                     {
-
+                        if(ptParentPageParams->iPageID == ID("browse")){
+                            strcpy(tPageParams.strCurPicFile, strFullPathName);
+                            Page("auto")->Run(&tPageParams);
+                            ShowManualPage(&g_tManualPageMenuIconsLayout, tPageParams.strCurPicFile);
+                        }else{
+                            return ;
+                        }
+                        break;
                     }
                     default:
                     {
