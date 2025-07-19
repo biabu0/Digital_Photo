@@ -12,6 +12,7 @@
 #include<input_manager.h>
 #include<file.h>
 #include<string.h>
+#include<draw.h>
 
 // 文件浏览器界面中图标和文件名的尺寸规范
 #define DIR_FILE_ICON_WIDTH    40
@@ -948,6 +949,13 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                                 //ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
                                 ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
                                 DBG_PRINTF("<5>Return from manual page--->>>ShowBrowsePage!\n");
+                            }else if(IsTxtFileByExtension(tPageParams.strCurPicFile)){
+                                DBG_PRINTF("<5>Enter text page!\n");
+                                tPageParams.iPageID = ID("browse");
+                                Page("text")->Run(&tPageParams);
+                                DBG_PRINTF("<5>Return from text page!\n");
+                                //ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
+                                ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
                             }
 
                         }                        

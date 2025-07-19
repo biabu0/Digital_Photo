@@ -10,6 +10,10 @@
 #include<string.h>
 #include<picfmt_manager.h>
 
+
+static __render_event g_render_event_only_for_mouse = NULL;
+#define call_render_event() if(g_render_event_only_for_mouse) g_render_event_only_for_mouse();
+
 // bmp.c中的
 extern T_PicFileParser g_tBMPParser;
 
@@ -23,7 +27,8 @@ void FlushVideoMemToDev(PT_VideoMem ptVideoMem){
     if(!ptVideoMem->iDevFrameBuffer){
         // 如果是设备显存，则不需要刷新操作
         ptDefaultDisoOpr->ShowPage(ptVideoMem);
-    }    
+    }
+	call_render_event();    
     return ; 
 }
 
@@ -155,7 +160,7 @@ static void InvertButton(PT_Layout ptLayout){
     pucVideoMem += ptLayout->iTopLeftY * ptDispOpr->iLineWidth + ptLayout->iTopLeftX * ptDispOpr->iBpp / 8;
 
     // 每一个像素由多个字节构成，计算总的字节数
-    iButtonWithBytes = (ptLayout->iBotRightX - ptLayout->iTopLeftX) * ptDispOpr->iBpp / 8;
+    iButtonWithBytes = (ptLayout->iBotRightX - ptLayout->iTopLeftX + 1) * ptDispOpr->iBpp / 8;
 
     for(iY = ptLayout->iTopLeftY; iY < ptLayout->iBotRightY; iY++){
         for(i= 0; i < iButtonWithBytes; i++){
@@ -163,6 +168,7 @@ static void InvertButton(PT_Layout ptLayout){
         }
         pucVideoMem += ptDispOpr->iLineWidth;
     }
+	call_render_event();
 }
 void ReleaseButton(PT_Layout ptLayout){
     //直接在显存中修改
@@ -307,6 +313,7 @@ static int MergeOneFontToVideoMem(PT_FontBitMap ptFontBitMap, PT_VideoMem ptVide
 		DBG_PRINTF("<3>ShowOneFont error, can't support %d bpp\n", ptFontBitMap->iBpp);
 		return -1;
 	}
+	call_render_event();
 	return 0;
 }
 
@@ -327,6 +334,7 @@ void ClearRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int iBotRightX, int 
 	for (y = iTopLeftY; y <= iBotRightY; y++)
 		for (x = iTopLeftX; x <= iBotRightX; x++)
 			SetColorForPixelInVideoMem(x, y, ptVideoMem, dwColor);
+	call_render_event();
 }
 
 int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int iBotRightX, int iBotRightY, unsigned char *pucTextString, PT_VideoMem ptVideoMem)
@@ -473,11 +481,13 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
     			if (MergeOneFontToVideoMem(&tFontBitMap, ptVideoMem))
     			{
     				DBG_PRINTF("<3>MergeOneFontToVideoMem error for code 0x%x\n", dwCode);
+					call_render_event();
     				return -1;
     			}
             }
             else
             {
+				call_render_event();
                 return 0;
             }
 			//DBG_PRINTF("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -490,6 +500,7 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
 			DBG_PRINTF("<3>GetFontBitmap for drawing error!\n");
 		}
 	}
+	call_render_event();
 
 	return 0;
 }
@@ -527,4 +538,15 @@ int isPictureFileSupported(char *strFileName){
 }
 void PressButton(PT_Layout ptLayout){
     InvertButton(ptLayout);
+}
+
+
+int register_render_event(__render_event render_event){
+	if(!render_event || g_render_event_only_for_mouse){
+		printf(APP_ERR"Register render event error!\n");
+		return -1;
+	}else{
+		g_render_event_only_for_mouse = render_event;
+		return 0;
+	}
 }

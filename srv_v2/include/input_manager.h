@@ -32,6 +32,7 @@ typedef struct InputOpr{
     int (*DeviceExit)(void);
     // 获取输入事件
     int (*GetInputEnvent)(PT_InputEvent ptInputEvent);
+    int (*SlipGetInputEvent)(PT_InputEvent ptInputEvent);
     // 链表
     struct InputOpr *ptNext;
 }T_InputOpr, *PT_InputOpr;
@@ -43,6 +44,7 @@ int ShowInputOpr(void);
 int GetInputEvent(PT_InputEvent ptInputEvent);
 int TouchScreenInit(void);
 int StdinInit(void);
+int MouseInit(void);
 int SlipGetInputEvent(PT_InputEvent ptInputEvent);
 
 #endif

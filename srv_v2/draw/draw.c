@@ -11,6 +11,17 @@
 #include <string.h>
 #include <input_manager.h>
 #include <stdlib.h>
+#include <file.h>
+#include<config.h>
+#include<page_manager.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<disp_manager.h>
+#include<render.h>
+#include<input_manager.h>
+#include<file.h>
+#include<string.h>
+#include<draw.h>
 
 /*定义一个页描述结构体，包含当前页数，当前LCD首个显示字符在文件中的位置以及下一页首个显示字符在文件中的位置；
  *结构体指针指向前或者下一页的页描述结构体；
@@ -36,9 +47,11 @@ static unsigned char *g_pucLcdFirstPosAtFile;
 static unsigned char *g_pucLcdNextPosAtFile;
 static int g_dwFontSize;
 
-
+extern T_Layout g_tTxtLayout;
 static PT_PageDesc g_ptPages   = NULL;
 static PT_PageDesc g_ptCurPage = NULL;
+
+static T_FileMap g_tFileMap;
 
 int OpenTextFile(char *pcFileName){
 
@@ -179,6 +192,72 @@ int RelocateFontPos(PT_FontBitMap ptFontBitMap)
 	return 0;
 }
 
+/**
+ * @brief 将字体点阵数据合并到视频内存（支持自定义渲染区域）
+ * @param ptFontBitMap 字体点阵数据（1bpp）
+ * @param pucVideoMem  显存指针（ARGB8888 格式）
+ * @param iScreenWidth 屏幕总宽度（像素）
+ * @param iScreenHeight 屏幕总高度（像素）
+ * @param iVideoMemX   渲染区域的左上角 X 坐标（避免右侧菜单）
+ * @param iVideoMemY   渲染区域的左上角 Y 坐标
+ * @return 0 成功，-1 失败
+ */
+int MergeOneFontToVideoMem(
+    PT_FontBitMap ptFontBitMap,
+    unsigned int *pucVideoMem,
+    int iScreenWidth,
+    int iScreenHeight,
+    int iVideoMemX,
+    int iVideoMemY
+) {
+    int x, y, i = 0, bit;
+    unsigned char ucByte = 0;
+
+    /* 参数检查 */
+    if (!ptFontBitMap || !pucVideoMem || iScreenWidth <= 0 || iScreenHeight <= 0) {
+        DBG_PRINTF("Invalid parameters!\n");
+        return -1;
+    }
+
+    /* 仅支持 1bpp 字体 */
+    if (ptFontBitMap->iBpp != 1) {
+        DBG_PRINTF("Unsupported bpp: %d (only 1bpp supported)\n", ptFontBitMap->iBpp);
+        return -1;
+    }
+
+    /* 遍历字体点阵 */
+    for (y = ptFontBitMap->iYTop; y < ptFontBitMap->iYMax; y++) {
+        i = (y - ptFontBitMap->iYTop) * ptFontBitMap->iPitch;  // 当前行字节偏移
+        for (x = ptFontBitMap->iXLeft, bit = 7; x < ptFontBitMap->iXMax; x++) {
+            if (bit == 7) {
+                ucByte = ptFontBitMap->pucBuffer[i++];  // 读取 8 像素（1字节）
+            }
+
+            /* 如果当前位为 1，则绘制像素 */
+            if (ucByte & (1 << bit)) {
+                /* 计算全局坐标（VideoMem 起始偏移 + 字体相对坐标） */
+                int iGlobalX = iVideoMemX + x;
+                int iGlobalY = iVideoMemY + y;
+
+                /* 检查是否在屏幕范围内 */
+                if (iGlobalX >= 0 && iGlobalX < iScreenWidth && 
+                    iGlobalY >= 0 && iGlobalY < iScreenHeight) {
+                    /* 计算显存位置并设置像素颜色 */
+                    int iOffset = iGlobalY * iScreenWidth + iGlobalX;
+                    pucVideoMem[iOffset] = COLOR_FOREGROUND;  // 字体颜色（如白色）
+                }
+            }
+
+            /* 处理位偏移 */
+            bit--;
+            if (bit == -1) {
+                bit = 7;  // 重置为下一个字节的高位
+            }
+        }
+    }
+
+    return 0;
+}
 int ShowOneFont(PT_FontBitMap ptFontBitMap){
 
     int x;
@@ -217,8 +296,7 @@ int ShowOneFont(PT_FontBitMap ptFontBitMap){
 
     return 0;
 }
-
-int ShowOnePage(unsigned char *pucTextFileMemCurPos){
+int ShowOnePage(unsigned char *pucTextFileMemCurPos, PT_VideoMem ptVideoMem){
 
     int iLen;
     int iError;
@@ -286,13 +364,18 @@ int ShowOnePage(unsigned char *pucTextFileMemCurPos){
                     return 0;
                 }
                 /* 清屏 */
-                if(bHasNotClrSceen){
-                    g_ptDispOpr->CleanScreen(COLOR_BACKGROUND);
-                    bHasNotClrSceen = 0;
+                // if(bHasNotClrSceen){
+                //     g_ptDispOpr->CleanScreen(COLOR_BACKGROUND);
+                //     bHasNotClrSceen = 0;
 
-                }
+                // }
                 /* 根据点阵信息显示一个字体 */
-                if(ShowOneFont(&tFontBitMap)){
+                int iVideoMemX = g_tTxtLayout.iTopLeftX;
+                int iVideoMemY = g_tTxtLayout.iTopLeftY;
+                int iScreenWidth = g_ptDispOpr->iXres;
+                int iScreenHeight = g_ptDispOpr->iYres;
+                
+                if(MergeOneFontToVideoMem(&tFontBitMap, ptVideoMem, iScreenWidth, iScreenHeight, iVideoMemX, iVideoMemY)){
                     return -1;
                 }
                 
@@ -308,82 +391,222 @@ int ShowOnePage(unsigned char *pucTextFileMemCurPos){
 
     return 0;
 }
+// int ShowOnePage(unsigned char *pucTextFileMemCurPos){
+
+//     int iLen;
+//     int iError;
+//     int bHasGetCode = 0;
+//     int bHasNotClrSceen = 1;
+    
+//     PT_FontOpr ptFontOpr;
+// 	T_FontBitMap tFontBitMap;
+
+//     unsigned char *pucBufStart;
+//     // 存放字体编码
+//     unsigned int dwCode;
+
+//     tFontBitMap.iCurOriginX = 0;
+//     tFontBitMap.iCurOriginY = g_dwFontSize;
+//     pucBufStart = pucTextFileMemCurPos;
+
+
+//     while(1){
+//         /* 获取Unicode编码到dwCode中*/
+//         iLen = g_ptEncodingOprForFile->GetCodeFrmBuf(pucBufStart, g_pucTextFileMemEnd, &dwCode);
+//         if(iLen == 0){
+//             /* 文件结束 */
+//             if(!bHasGetCode){
+//                 return -1;
+//             }else{
+//                 return 0;
+//             }
+//         }
+
+//         bHasGetCode = 1;
+
+//         pucBufStart += iLen;
+//         /* 有些文本, \n\r两个一起才表示回车换行
+// 		 * 碰到这种连续的\n\r, 只处理一次
+// 		 */
+//         if(dwCode == '\n'){
+//             // 下一字体点阵的位置
+//             g_pucLcdNextPosAtFile = pucBufStart;
+
+//             tFontBitMap.iCurOriginX = 0;
+//             tFontBitMap.iCurOriginY = IncLcdY(tFontBitMap.iCurOriginY);
+//             if(tFontBitMap.iCurOriginY == 0){
+//                 /* 满屏 当前页面显示结束 */
+//                 return 0;
+//             }else{
+//                 continue;
+//             }
+//         }else if(dwCode == '\r'){
+//             continue;
+//         }else if(dwCode == '\t'){
+//             dwCode = ' ';
+//         }
+//         //DBG_PRINTF("dwCode = 0x%x\n", dwCode);
+
+//         ptFontOpr = g_ptEncodingOprForFile->ptFontOprSupportedHead;
+//         while(ptFontOpr){
+//             //DBG_PRINTF("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+//             /* 根据unicode码获取点阵信息*/
+//             iError = ptFontOpr->GetFontBitmap(dwCode, &tFontBitMap);
+//             //DBG_PRINTF("%s %s %d, ptFontOpr->name = %s, %d\n", __FILE__, __FUNCTION__, __LINE__, ptFontOpr->name, iError);
+//             if(iError == 0){
+//                 /* 需要判断当前字体点阵是否超过屏幕限制 */
+//                 if(RelocateFontPos(&tFontBitMap)){
+//                     return 0;
+//                 }
+//                 /* 清屏 */
+//                 // if(bHasNotClrSceen){
+//                 //     g_ptDispOpr->CleanScreen(COLOR_BACKGROUND);
+//                 //     bHasNotClrSceen = 0;
+
+//                 // }
+//                 /* 根据点阵信息显示一个字体 */
+//                 if(ShowOneFont(&tFontBitMap)){
+//                     return -1;
+//                 }
+                
+//                 /* 当前的值应该等于下一个值 */
+//                 tFontBitMap.iCurOriginX = tFontBitMap.iNextOriginX;
+//                 tFontBitMap.iCurOriginY = tFontBitMap.iNextOriginY;
+//                 g_pucLcdNextPosAtFile = pucBufStart;
+//                 break;
+//             }
+//             ptFontOpr = ptFontOpr->ptNext;
+//         }
+//     }
+
+//     return 0;
+// }
 
 
 // 记录已经打开的页
-static void RecordPage(PT_PageDesc ptPageNew){
-    PT_PageDesc ptPage;
+// static void RecordPage(PT_PageDesc ptPageNew){
+//     PT_PageDesc ptPage;
 
-    if(!g_ptPages){
-        g_ptPages = ptPageNew;
-    }else{
-        ptPage = g_ptPages;
-        while(ptPage->ptNextPage){
-            ptPage = ptPage->ptNextPage;
-        }
-        ptPage->ptNextPage = ptPageNew;
-        ptPageNew->ptPrePage = ptPage;
-    }
-}
+//     if(!g_ptPages){
+//         g_ptPages = ptPageNew;
+//     }else{
+//         ptPage = g_ptPages;
+//         while(ptPage->ptNextPage){
+//             ptPage = ptPage->ptNextPage;
+//         }
+//         ptPage->ptNextPage = ptPageNew;
+//         ptPageNew->ptPrePage = ptPage;
+//     }
+// }
 
-int ShowNextPage(void){
+// int ShowNextPage(void){
 
-    unsigned char *pucTextFileMemCurPos;
-    PT_PageDesc ptPage;
-    int iError;
+//     unsigned char *pucTextFileMemCurPos;
+//     PT_PageDesc ptPage;
+//     int iError;
 
-    // 当前页面为空，即刚开始运行程序
-    if(g_ptCurPage){
-        pucTextFileMemCurPos = g_ptCurPage->pucLcdNextPageFirstPosAtFile;
-    }else{
-        pucTextFileMemCurPos = g_pucLcdFirstPosAtFile;
-    }
-    // 得到一页的起始位置，可以显示一页了
-    iError = ShowOnePage(pucTextFileMemCurPos);
-    DBG_PRINTF("%s %d, %d\n", __FUNCTION__, __LINE__, iError);
-    // 显示成功之后，设置下一页
-    if(iError == 0){
-       if (g_ptCurPage && g_ptCurPage->ptNextPage)
-		{
-			g_ptCurPage = g_ptCurPage->ptNextPage;
-			return 0;
-		} 
+//     // 当前页面为空，即刚开始运行程序
+//     if(g_ptCurPage){
+//         pucTextFileMemCurPos = g_ptCurPage->pucLcdNextPageFirstPosAtFile;
+//     }else{
+//         pucTextFileMemCurPos = g_pucLcdFirstPosAtFile;
+//     }
+//     // 得到一页的起始位置，可以显示一页了
+//     iError = ShowOnePage(pucTextFileMemCurPos);
+//     DBG_PRINTF("%s %d, %d\n", __FUNCTION__, __LINE__, iError);
+//     // 显示成功之后，设置下一页
+//     if(iError == 0){
+//        if (g_ptCurPage && g_ptCurPage->ptNextPage)
+// 		{
+// 			g_ptCurPage = g_ptCurPage->ptNextPage;
+// 			return 0;
+// 		} 
 
-        ptPage = malloc(sizeof(T_PageDesc));
-        if(ptPage){
-            ptPage->pucLcdFirstPosAtFile            = pucTextFileMemCurPos;
-            ptPage->pucLcdNextPageFirstPosAtFile    = g_pucLcdNextPosAtFile;
-            ptPage->ptPrePage                        = NULL;
-            ptPage->ptNextPage                        = NULL;
-            g_ptCurPage = ptPage;
+//         ptPage = malloc(sizeof(T_PageDesc));
+//         if(ptPage){
+//             ptPage->pucLcdFirstPosAtFile            = pucTextFileMemCurPos;
+//             ptPage->pucLcdNextPageFirstPosAtFile    = g_pucLcdNextPosAtFile;
+//             ptPage->ptPrePage                        = NULL;
+//             ptPage->ptNextPage                        = NULL;
+//             g_ptCurPage = ptPage;
 
-            DBG_PRINTF("%s %d, pos = 0x%x\n", __FUNCTION__, __LINE__, (unsigned int)ptPage->pucLcdFirstPosAtFile);
-            // 将该页面记录到链表
-            RecordPage(ptPage);
-            return 0;
-        }else{
-            return -1;
-        }
-    }
-    return iError;
-}
-int ShowPrePage(void){
-    int iError;
+//             DBG_PRINTF("%s %d, pos = 0x%x\n", __FUNCTION__, __LINE__, (unsigned int)ptPage->pucLcdFirstPosAtFile);
+//             // 将该页面记录到链表
+//             RecordPage(ptPage);
+//             return 0;
+//         }else{
+//             return -1;
+//         }
+//     }
+//     return iError;
+// }
+// int ShowPrePage(void){
+//     int iError;
 
-    if(!g_ptCurPage || !g_ptCurPage->ptPrePage){
-        return -1;
-    }
-    DBG_PRINTF("%s %d, pos = 0x%x\n", __FUNCTION__, __LINE__, (unsigned int)g_ptCurPage->ptPrePage->pucLcdFirstPosAtFile);
-    iError = ShowOnePage(g_ptCurPage->ptPrePage->pucLcdFirstPosAtFile);
-    if(iError == 0){
-        DBG_PRINTF("%s %d\n", __FUNCTION__, __LINE__);
-        g_ptCurPage = g_ptCurPage->ptPrePage;
-    }
+//     if(!g_ptCurPage || !g_ptCurPage->ptPrePage){
+//         return -1;
+//     }
+//     DBG_PRINTF("%s %d, pos = 0x%x\n", __FUNCTION__, __LINE__, (unsigned int)g_ptCurPage->ptPrePage->pucLcdFirstPosAtFile);
+//     iError = ShowOnePage(g_ptCurPage->ptPrePage->pucLcdFirstPosAtFile);
+//     if(iError == 0){
+//         DBG_PRINTF("%s %d\n", __FUNCTION__, __LINE__);
+//         g_ptCurPage = g_ptCurPage->ptPrePage;
+//     }
 
-    return iError;
+//     return iError;
     
-}
+// }
 
+int IsTxtFileByExtension(const char *filename) {
+    const char *dot = strrchr(filename, '.');
+    if (!dot) return 0;  // 无扩展名
+    return (strcasecmp(dot, ".txt") == 0 || 
+            strcasecmp(dot, ".log") == 0 || 
+            strcasecmp(dot, ".csv") == 0);  // 可扩展其他文本扩展名
+}
+int ShowTextInReadingPage(PT_VideoMem ptVideoMem, char *strFileName)
+{
+	int iError;
+ 
+	// 打开文本文件
+	strncpy(g_tFileMap.strFileName, strFileName, 256);
+	g_tFileMap.strFileName[255] = '\0';
+    iError = MapFile(&g_tFileMap);
+    if (iError)
+    {
+        DBG_PRINTF("MapFile %s error!\n", strFileName);
+        return 0;
+    }
+ 
+	// 确认文件编码
+	g_ptEncodingOprForFile = SelectEncodingOprForFile(g_tFileMap.pucFileMapMem);
+    if (!g_ptEncodingOprForFile)
+    {
+        DBG_PRINTF("SelectEncodingOprForFile %s error!\n", strFileName);
+        UnMapFile(&g_tFileMap);
+        return 0;
+    }
+  
+	// 第一个显示字符紧接在文件头后面
+    g_pucLcdFirstPosAtFile = g_tFileMap.pucFileMapMem + g_ptEncodingOprForFile->iHeadLen;
+ 
+ 
+    // 在打开的文件中标记索引位置，在显示设备上逐行逐个显示字符
+	// 自动记录当前的进度，重新打开时恢复
+	unsigned char *pucTextFileMemCurPos;
+ 
+	if (g_ptCurPage)
+	{
+		pucTextFileMemCurPos = g_ptCurPage->pucLcdFirstPosAtFile;	// 上一次阅读界面的第一个字符
+	}
+	else
+	{
+		pucTextFileMemCurPos = g_pucLcdFirstPosAtFile;				// 文本文件中的第一个字符
+	}
+	iError = ShowOnePage(pucTextFileMemCurPos, ptVideoMem);
+ 
+    return 0;
+}
 
 
 int DrawInit(void){

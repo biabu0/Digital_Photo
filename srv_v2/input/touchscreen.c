@@ -28,7 +28,7 @@ static int TouchScreenDeviceInit(){
 
     if((pcTSName = getenv("TSLIB_TSDEVICE")) != NULL){
         // 设置为0，以阻塞的方式打开
-        g_tTSDEV = ts_open(pcTSName, 1);
+        g_tTSDEV = ts_open(pcTSName, 0);
     }else{
         g_tTSDEV = ts_open("/dev/input/event1", 1);
     }
@@ -148,6 +148,7 @@ static T_InputOpr g_tTouchScreenOpr = {
     .DeviceExit = TouchScreenDeviceExit,
     .DeviceInit = TouchScreenDeviceInit,
     .GetInputEnvent =TouchScreenGetInputEvent,
+    .SlipGetInputEvent = SlipGetInputEvent,
 };
 
 int TouchScreenInit(void){

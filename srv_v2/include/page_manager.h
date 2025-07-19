@@ -55,6 +55,7 @@ int ExplorePageInit(void);
 int AutoPageInit(void);
 int SettingPageInit(void);
 int IntervalPageInit(void);
+int TextPageInit(void);
 PT_PageAction Page(char *pcName);
 int GeneratePage(PT_PageLayout ptPageLayout, PT_VideoMem ptVideoMem);
 int GenericPageGetInputEvent(PT_PageLayout ptPageLayout, PT_InputEvent ptInputEvent);

@@ -260,6 +260,7 @@ int PagesInit(void){
 	iError = AutoPageInit();
 	iError = SettingPageInit();
 	iError = IntervalPageInit();
+	iError = TextPageInit();
 	return iError;
 }
 

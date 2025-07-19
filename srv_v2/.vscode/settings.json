@@ -19,6 +19,7 @@
         "random": "c",
         "stdio.h": "c",
         "setjmp.h": "c",
-        "file.h": "c"
+        "file.h": "c",
+        "type_traits": "c"
     }
 }
