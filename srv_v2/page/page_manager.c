@@ -128,7 +128,7 @@ int GeneratePage(PT_PageLayout ptPageLayout, PT_VideoMem ptVideoMem){
 
 	// 页面数据没有生成
     if(ptVideoMem->ePicDataState != PDS_GENERATED){
-		DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+		//DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 		// 先清理VideoMem
 		ClearVideoMem(ptVideoMem, COLOR_BACKGROUND);
 
@@ -217,9 +217,9 @@ int GenericPageGetInputEvent(PT_PageLayout ptPageLayout, PT_InputEvent ptInputEv
 
     // 处理数据
     // 1.确定触点位于哪一个按钮上
-	DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+	//DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     while(aptLayout[i].strIconName){
-		printf("aptLayout[i].strIconName: %s\n", aptLayout[i].strIconName);
+		//printf("aptLayout[i].strIconName: %s\n", aptLayout[i].strIconName);
         if((tInputEvent.iX >= aptLayout[i].iTopLeftX) && (tInputEvent.iX <= aptLayout[i].iBotRightX) \
             && (tInputEvent.iY >= aptLayout[i].iTopLeftY) && (tInputEvent.iY <= aptLayout[i].iBotRightY)){
             // 找到被点中的按钮，返回按钮的下标
@@ -228,7 +228,7 @@ int GenericPageGetInputEvent(PT_PageLayout ptPageLayout, PT_InputEvent ptInputEv
             i++;
         }
     }
-	DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+	//DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
     // 点击位置不位于按钮内部
     return -1;

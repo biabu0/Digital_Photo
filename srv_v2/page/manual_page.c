@@ -1,6 +1,10 @@
 /**
  *  文件内容界面的实现
- *  时间：2025/06/08 - 
+ *  时间：2025/06/08 
+ *  作者：biabu
+ *  -------------------------------------
+ *  预读线程提前加载图片数据，提高图片切换效率
+ *  时间：2025/07/21
  *  作者：biabu
  * */
 
@@ -14,6 +18,7 @@
 #include<input_manager.h>
 #include<file.h>
 #include<string.h>
+#include<pthread.h>
 // 放大/缩小系数 在定义宏的时候要注意()尤其是宏是一个表达式的时候
 #define ZOOM_RATIO (0.9)
 
@@ -154,14 +159,20 @@ static void CalcManualPagePictureLayout(void){
  * @date    2025/06/10
  * @version 1.0
  */
-static PT_PixelDatas GetOriginPictureFilePixelDatas(char *strFileName){
+static PT_PixelDatas GetOriginPictureFilePixelDatas(char *strFileName, PT_PixelDatas ptPixelDatas){
     int iError;
     if(g_tOriginPicPixelDatas.aucPixelDatas){
         free(g_tOriginPicPixelDatas.aucPixelDatas);
         g_tOriginPicPixelDatas.aucPixelDatas = NULL;
     }
-    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-    iError = GetPixelDatasFrmFile(strFileName, &g_tOriginPicPixelDatas);
+    if(ptPixelDatas){
+        iError = 0;
+        memcpy(&g_tOriginPicPixelDatas, ptPixelDatas, sizeof(T_PixelDatas));
+        free(ptPixelDatas);
+    }else{
+        iError = GetPixelDatasFrmFile(strFileName, &g_tOriginPicPixelDatas);
+    }
+    //DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     if (iError){
         return NULL;
     }else{
@@ -194,11 +205,11 @@ static PT_PixelDatas GetZoomedPicPixelDatas(PT_PixelDatas ptOriginPicPixelDatas,
         free(g_tZoomedPicPixelDatas.aucPixelDatas);
         g_tZoomedPicPixelDatas.aucPixelDatas = NULL;
     }
-    DBG_PRINTF("ptOriginPicPixelDatas->iHeight: %d\n", ptOriginPicPixelDatas->iHeight);
-    DBG_PRINTF("ptOriginPicPixelDatas->iWidth: %d\n",ptOriginPicPixelDatas->iWidth);
+    // DBG_PRINTF("ptOriginPicPixelDatas->iHeight: %d\n", ptOriginPicPixelDatas->iHeight);
+    // DBG_PRINTF("ptOriginPicPixelDatas->iWidth: %d\n",ptOriginPicPixelDatas->iWidth);
     // 记录尺度
     k = (float)ptOriginPicPixelDatas->iHeight / ptOriginPicPixelDatas->iWidth;
-    DBG_PRINTF("k = %f\n", k);
+    // DBG_PRINTF("k = %f\n", k);
     g_tZoomedPicPixelDatas.iWidth  = iZoomedWidth;
     g_tZoomedPicPixelDatas.iHeight = iZoomedWidth * k;
     if (g_tZoomedPicPixelDatas.iHeight > iZoomedHeight)
@@ -209,10 +220,10 @@ static PT_PixelDatas GetZoomedPicPixelDatas(PT_PixelDatas ptOriginPicPixelDatas,
     g_tZoomedPicPixelDatas.iBpp        = iBpp;
     g_tZoomedPicPixelDatas.iLineBytes  = g_tZoomedPicPixelDatas.iWidth * g_tZoomedPicPixelDatas.iBpp / 8;
     g_tZoomedPicPixelDatas.iTotalBytes = g_tZoomedPicPixelDatas.iLineBytes * g_tZoomedPicPixelDatas.iHeight;
-    DBG_PRINTF("zoomed pic pixel data size = %d\n", g_tZoomedPicPixelDatas.iTotalBytes);
-    DBG_PRINTF("zoomed pic pixel data line bytes = %d\n", g_tZoomedPicPixelDatas.iLineBytes);
-    DBG_PRINTF("g_tZoomedPicPixelDatas.iHeight = %d\n", g_tZoomedPicPixelDatas.iHeight);
-    DBG_PRINTF("g_tZoomedPicPixelDatas.iWidth = %d\n", g_tZoomedPicPixelDatas.iWidth);
+    // DBG_PRINTF("zoomed pic pixel data size = %d\n", g_tZoomedPicPixelDatas.iTotalBytes);
+    // DBG_PRINTF("zoomed pic pixel data line bytes = %d\n", g_tZoomedPicPixelDatas.iLineBytes);
+    // DBG_PRINTF("g_tZoomedPicPixelDatas.iHeight = %d\n", g_tZoomedPicPixelDatas.iHeight);
+    // DBG_PRINTF("g_tZoomedPicPixelDatas.iWidth = %d\n", g_tZoomedPicPixelDatas.iWidth);
 
 
 
@@ -240,14 +251,14 @@ static PT_PixelDatas GetZoomedPicPixelDatas(PT_PixelDatas ptOriginPicPixelDatas,
  * @date    2025/06/10
  * @version 1.0
  */
-static int ShowPictureInManualPage(PT_VideoMem ptVideoMem, char *strFileName){
+static int ShowPictureInManualPage(PT_VideoMem ptVideoMem, char *strFileName, PT_PixelDatas pic_data){
     int iPicLayoutWidth;
     int iPicLayoutHeight;
     int iTopLeftX, iTopLeftY;
     PT_PixelDatas ptOriginPicPixelDatas;
     PT_PixelDatas ptZoomedPicPixelDatas;
     // 1. 打开文件，获取文件信息
-    ptOriginPicPixelDatas = GetOriginPictureFilePixelDatas(strFileName);
+    ptOriginPicPixelDatas = GetOriginPictureFilePixelDatas(strFileName, pic_data);
     // GetPixelDatasFrmFile(strFileName, &g_tOriginPicPixelDatas);
     // ptOriginPicPixelDatas = &g_tOriginPicPixelDatas;
 
@@ -257,12 +268,12 @@ static int ShowPictureInManualPage(PT_VideoMem ptVideoMem, char *strFileName){
         DBG_PRINTF("<3>GetOriginPictureFilePixelDatas error!\n");
         return -1;
     }
-    DBG_PRINTF("<6>g_tOriginPicPixelDatas.iTotalBytes:%d\n", g_tOriginPicPixelDatas.iTotalBytes);
+    //DBG_PRINTF("<6>g_tOriginPicPixelDatas.iTotalBytes:%d\n", g_tOriginPicPixelDatas.iTotalBytes);
     // 2. 缩放到指定大小
     iPicLayoutWidth = g_tManualPictureLayout.iBotRightX - g_tManualPictureLayout.iTopLeftX + 1;
     iPicLayoutHeight = g_tManualPictureLayout.iBotRightY - g_tManualPictureLayout.iTopLeftY + 1;
     ptZoomedPicPixelDatas = GetZoomedPicPixelDatas(&g_tOriginPicPixelDatas, iPicLayoutWidth, iPicLayoutHeight);
-    DBG_PRINTF("iTotalBytes: %d\n", ptZoomedPicPixelDatas->iTotalBytes);
+    //DBG_PRINTF("iTotalBytes: %d\n", ptZoomedPicPixelDatas->iTotalBytes);
     if (!ptZoomedPicPixelDatas)
     {
         return -1;
@@ -275,7 +286,7 @@ static int ShowPictureInManualPage(PT_VideoMem ptVideoMem, char *strFileName){
 
     // 显示之前先清空数据区域
     ClearVideoMemRegion(ptVideoMem, &g_tManualPictureLayout, COLOR_BACKGROUND);
-    DBG_PRINTF("iTotalBytes: %d\n", ptZoomedPicPixelDatas->iTotalBytes);
+    //DBG_PRINTF("iTotalBytes: %d\n", ptZoomedPicPixelDatas->iTotalBytes);
     PicMerge(iTopLeftX, iTopLeftY, ptZoomedPicPixelDatas, &ptVideoMem->tPixelDatas);
     return 0;
 }
@@ -291,7 +302,7 @@ static int ShowPictureInManualPage(PT_VideoMem ptVideoMem, char *strFileName){
  * @date    2025/06/10
  * @version 1.0
  */
-static void ShowManualPage(PT_PageLayout ptPageLayout, char *strFileName){
+static void ShowManualPage(PT_PageLayout ptPageLayout, char *strFileName, PT_PixelDatas pic_data){
     int iError;
     (void)iError;
 
@@ -316,7 +327,7 @@ static void ShowManualPage(PT_PageLayout ptPageLayout, char *strFileName){
     }
     /* 在videomem上生成图标 */
     iError = GeneratePage(ptPageLayout, ptVideoMem);
-    iError = ShowPictureInManualPage(ptVideoMem, strFileName);
+    iError = ShowPictureInManualPage(ptVideoMem, strFileName, pic_data);
     if (iError)
     {
         PutVideoMem(ptVideoMem);
@@ -436,7 +447,31 @@ static void ShowZoomedPictureInLayout(PT_PixelDatas ptZoomedPicPixelDatas, PT_Vi
 
 }
 
+
+// 预读图片的线程，优化图片切换
+static void* StartNextPicture(void* filename){
+    PT_PixelDatas ptNextPicDatas = malloc(sizeof(T_PixelDatas));
+    if(!ptNextPicDatas){
+        DBG_PRINTF(APP_ERR "StartNextPicture picture_data malloc failed\n");
+        pthread_exit(NULL);
+    }
+    DBG_PRINTF(APP_INFO"<Start Parse> %s!\n", filename);
+    if(GetPixelDatasFrmFile(filename, ptNextPicDatas)){
+        DBG_PRINTF(APP_ERR"<fault> can't get picture data from %s!\n", filename);
+        free(ptNextPicDatas);
+        pthread_exit(NULL);
+    }
+    DBG_PRINTF(APP_INFO"<End Parse> %s!\n", filename);
+    pthread_exit(ptNextPicDatas);
+}
+
 static void ManualPageRun(PT_PageParams ptParentPageParams){
+
+    // 下一张图片的线程
+    pthread_t tNextPicThread;
+    PT_PixelDatas ptNextPicPixelDatas;
+
+
     // 当前文件的路径
     char strFullPathName[256];
     // 当前文件所在的目录地址
@@ -463,12 +498,12 @@ static void ManualPageRun(PT_PageParams ptParentPageParams){
     
     // 获取显存，直接改变显存内容
     ptDevVideoMem = GetDevVideoMem();
-    DBG_PRINTF("<3>GetDevVideoMem\n");
+    //DBG_PRINTF("<3>GetDevVideoMem\n");
     strcpy(strFullPathName, ptParentPageParams->strCurPicFile);
 
     // 1.显示界面：显示菜单和文件内容界面
     DBG_PRINTF("<3>ShowManualPage\n");
-    ShowManualPage(&g_tManualPageMenuIconsLayout, strFullPathName);
+    ShowManualPage(&g_tManualPageMenuIconsLayout, strFullPathName, NULL);
 
 
     // 2. 处理路径信息用于显示其他文件
@@ -485,6 +520,30 @@ static void ManualPageRun(PT_PageParams ptParentPageParams){
             break;
         }
     }
+
+    // 循环寻找下一张图片路径，为其创建线程
+    int start_index_1 = iPicFileIndex; // 记录起始位置
+    do {
+        // 递增索引（循环）
+        iPicFileIndex = (iPicFileIndex + 1) % iDirContentsNumber;
+        // 防止无限循环（遍历完所有文件后退出）
+        if(iPicFileIndex == start_index_1) {
+            DBG_PRINTF(APP_INFO"All files processed\n");
+            break;
+        }
+        // 构造路径
+        snprintf(strFullPathName, 256, "%s/%s", 
+            strDirName, aptDirContents[iPicFileIndex]->strName);
+        strFullPathName[255] = '\0';
+    
+        // 检查文件类型
+        if(isPictureFileSupported(strFullPathName)){
+            pthread_create(&tNextPicThread, NULL, 
+                        (void*)StartNextPicture, strFullPathName);
+            break;
+        }
+    } while(1);
+
     // 3. 调用GetInputEvent获取输入事件并处理
     while(1){
         iIndex = ManualPageGetInputEvent(&g_tManualPageMenuIconsLayout, &tInputEvent);
@@ -530,7 +589,7 @@ static void ManualPageRun(PT_PageParams ptParentPageParams){
                             snprintf(strFullPathName, 256, "%s/%s", strDirName, aptDirContents[iPicFileIndex]->strName);
                             strFullPathName[255] = '\0';
                             if(isPictureFileSupported(strFullPathName)){
-                                ShowPictureInManualPage(ptDevVideoMem, strFullPathName);
+                                ShowPictureInManualPage(ptDevVideoMem, strFullPathName, NULL);
                                 break;
                             }
                         }
@@ -538,24 +597,49 @@ static void ManualPageRun(PT_PageParams ptParentPageParams){
                     }
                     case 4: //下一张
                     {
-                        while(iPicFileIndex < iDirContentsNumber - 1){
-                            iPicFileIndex++;
-                            snprintf(strFullPathName, 256, "%s/%s", strDirName, aptDirContents[iPicFileIndex]->strName);
-                            strFullPathName[255] = '\0';
-                            if(isPictureFileSupported(strFullPathName)){
-                                ShowPictureInManualPage(ptDevVideoMem, strFullPathName);
+                        //DBG_PRINTF(APP_INFO"__LINE__ = %d\n",__LINE__);
+                        if(pthread_join(tNextPicThread, (void**)&ptNextPicPixelDatas)){
+                            DBG_PRINTF(APP_INFO"__LINE__ = %d\n",__LINE__);
+                            DBG_PRINTF(APP_ERR"pthread_join error\n");
+                            break;
+                        }
+                        if(ptNextPicPixelDatas){
+                            ShowPictureInManualPage(ptDevVideoMem, NULL, ptNextPicPixelDatas);
+                        }
+                        //DBG_PRINTF(APP_INFO"__LINE__ = %d\n",__LINE__);
+                        // 循环寻找下一张图片路径，为其创建线程
+                        int start_index = iPicFileIndex; // 记录起始位置
+                        do {
+                            // 递增索引（循环）
+                            iPicFileIndex = (iPicFileIndex + 1) % iDirContentsNumber;
+                            // 防止无限循环（遍历完所有文件后退出）
+                            if(iPicFileIndex == start_index) {
+                                DBG_PRINTF(APP_INFO"All files processed\n");
                                 break;
                             }
-                        }
-                        break;
+                            // 构造路径
+                            snprintf(strFullPathName, 256, "%s/%s", 
+                                strDirName, aptDirContents[iPicFileIndex]->strName);
+                            strFullPathName[255] = '\0';
+                        
+                            // 检查文件类型
+                            if(isPictureFileSupported(strFullPathName)){
+                                pthread_create(&tNextPicThread, NULL, 
+                                            (void*)StartNextPicture, strFullPathName);
+                                break;
+                            }
+                        } while(1);
 
+                        //DBG_PRINTF(APP_INFO"__LINE__ = %d\n",__LINE__);
+                        break;
+                        
                     }
                     case 5://连播
                     {
                         if(ptParentPageParams->iPageID == ID("browse")){
                             strcpy(tPageParams.strCurPicFile, strFullPathName);
                             Page("auto")->Run(&tPageParams);
-                            ShowManualPage(&g_tManualPageMenuIconsLayout, tPageParams.strCurPicFile);
+                            ShowManualPage(&g_tManualPageMenuIconsLayout, tPageParams.strCurPicFile, NULL);
                         }else{
                             return ;
                         }

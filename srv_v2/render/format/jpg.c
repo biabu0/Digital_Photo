@@ -51,7 +51,7 @@ static void MyErrorExit(j_common_ptr ptCInfo)
 
     /* Create the message */
     (*ptCInfo->err->format_message) (ptCInfo, errStr);
-    DBG_PRINTF("%s\n", errStr);
+    //DBG_PRINTF("%s\n", errStr);
 
 	longjmp(ptMyErr->setjmp_buffer, 1);
 }
@@ -157,7 +157,7 @@ static int CovertOneLine(int iWidth, int iSrcBpp, int iDstBpp, unsigned char *pu
 
 
 static int JPGGetPixelDatas (PT_FileMap ptFileMap, PT_PixelDatas ptPixelDatas){
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+	//DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     struct jpeg_decompress_struct tDInfo;
 	//struct jpeg_error_mgr tJErr;
     int iRet;
@@ -211,7 +211,7 @@ static int JPGGetPixelDatas (PT_FileMap ptFileMap, PT_PixelDatas ptPixelDatas){
     {
         return -1;
     }
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+	//DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 	ptPixelDatas->iWidth  = tDInfo.output_width;
 	ptPixelDatas->iHeight = tDInfo.output_height;
@@ -249,7 +249,7 @@ static int JPGFreePixelDatas(PT_PixelDatas ptPixelDatas){
 }
 
 int JPG_Init(void){
-	DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+	//DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     return RegisterPicFileParser(&g_tJPGParser);
 }
 

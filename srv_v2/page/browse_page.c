@@ -108,7 +108,7 @@ static void CalcBrowsePageMenusLayout(PT_PageLayout ptPageLayout){
 
     GetDispResolution(&iX, &iY, &iBpp);
     ptPageLayout->iBpp = iBpp;
-    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     // 显示屏的长宽可能由于设备的不同而有所变化
     if(iX < iY){
         /*	 iXres/4
@@ -220,7 +220,7 @@ static void CalcBrowsePageDirAndFilesLayout(void){
  	int iTopLeftXBak; 
     int iDeltaX, iDeltaY;
     int i, j, k = 0;
-    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     GetDispResolution(&iXres, &iYres, &iBpp);
 
     // 起始位置确定
@@ -527,30 +527,30 @@ static void ShowBrowsePage(PT_PageLayout ptPageLayout){
         DBG_PRINTF("<3>GetVideoMem error!\n");
         return ;
     }
-    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     // 2. 描画数据
     // iTopLeftX == 0确定当前是否对数据进行描画
     if(aptLayout[0].iTopLeftX == 0){
-        DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+        //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
         // 计算菜单数据
         CalcBrowsePageMenusLayout(ptPageLayout);
         // 计算目录和文件布局
         CalcBrowsePageDirAndFilesLayout();
     }
     /* 生成"目录和文件"的图标 */
-    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     if (!g_tDirClosedIconPixelDatas.aucPixelDatas)
     {   
         DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
         GenerateDirAndFileIcons(&g_tBrowsePageDirAndFileLayout);
     }
-    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
     iError = GeneratePage(ptPageLayout, ptVideoMem);
-    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     iError = GenerateBrowsePageDirAndFile(g_iStartIndex, g_iDirContentsNumber, g_aptDirContents, ptVideoMem);
     // 3. 刷新到显存上
-    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     FlushVideoMemToDev(ptVideoMem);
     // 4. 释放内存块
     PutVideoMem(ptVideoMem);
@@ -805,10 +805,10 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                 {
                     bIconPressed    = 0;
                     if(!(bUsedToSelectDir && (iIndexPressed == 1))){
-                        DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                        //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                         ReleaseButton(&g_atMenuIconsLayout[iIndexPressed]);
                     }
-                    DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                    //DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
                     switch(iIndexPressed){
                         case 0: // 向上
@@ -826,9 +826,9 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                             }
                             pcTmp = strrchr(g_strCurDir, '/');
                             *pcTmp = '\0';
-                            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            //DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                             FreeDirContents(g_aptDirContents, g_iDirContentsNumber);
-                            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            //DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                             iError = GetDirContents(g_strCurDir, &g_aptDirContents, &g_iDirContentsNumber);
                             if (iError)
                             {
@@ -836,7 +836,7 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                                 return;
                             }
                             g_iStartIndex = 0;
-                            DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            //DBG_PRINTF("<7>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                             iError = GenerateBrowsePageDirAndFile(g_iStartIndex, g_iDirContentsNumber, g_aptDirContents, ptDevVideoMem);
                             
                             break;                                
@@ -888,7 +888,7 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                         
                     }
                 }else{
-                    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                     // if(iIndexPressed != iIndex){
                     //     // 恢复
                     //     DeSelectDirFileIcon(iIndexPressed - DIRFILE_ICON_INDEX_BASE);
@@ -937,8 +937,8 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                             // 获取文件路径
                             snprintf(tPageParams.strCurPicFile, 256, "%s/%s", g_strCurDir, g_aptDirContents[iDirFileContentIndex]->strName);
                             tPageParams.strCurPicFile[255] = '\0';
-                            DBG_PRINTF("<5>FILETYPE_FILE!\n");
-                            DBG_PRINTF("<5>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            // DBG_PRINTF("<5>FILETYPE_FILE!\n");
+                            // DBG_PRINTF("<5>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
                             if(isPictureFileSupported(tPageParams.strCurPicFile)){
                                 DBG_PRINTF("<5>Enter manual page!\n");
                                 tPageParams.iPageID = ID("browse");
