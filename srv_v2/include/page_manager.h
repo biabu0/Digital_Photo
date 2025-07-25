@@ -5,6 +5,7 @@
 #include<disp_manager.h>
 
 
+
 // 描述整个页面的布局
 typedef struct PageLayout{
 	int iTopLeftX;        /* 这个区域的左上角、右下角坐标 */
@@ -56,10 +57,12 @@ int AutoPageInit(void);
 int SettingPageInit(void);
 int IntervalPageInit(void);
 int TextPageInit(void);
+int MusicPageInit(void);
 PT_PageAction Page(char *pcName);
 int GeneratePage(PT_PageLayout ptPageLayout, PT_VideoMem ptVideoMem);
 int GenericPageGetInputEvent(PT_PageLayout ptPageLayout, PT_InputEvent ptInputEvent);
 void GetPageCfg(PT_PageCfg ptPageCfg);
 void GetSelectedDir(char *strSeletedDir);
 void GetIntervalTime(int *piIntervalSecond);
+
 #endif

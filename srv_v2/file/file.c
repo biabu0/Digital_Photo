@@ -238,6 +238,13 @@ int GetDirContents(char *strDirName, PT_DirContent **pptDirContents, int *piNumb
         return -1;
     }
 
+    // DBG_PRINTF(APP_INFO, "scandir : %s\n", strDirName);
+    // DBG_PRINTF(APP_INFO, "scandir number : %d\n", iNum);
+    // for(int i = 0; i < iNum; i++){
+    //     DBG_PRINTF("aptNameList[i]->d_name:%s\n",aptNameList[i]->d_name);
+    // }
+    
+
     /* 2. 分配空间
      * scandir 的扫描结果默认会包含当前目录（.）和父目录（..）两项，去掉这两项，生成iNum-2个空间
      */ 
@@ -262,15 +269,15 @@ int GetDirContents(char *strDirName, PT_DirContent **pptDirContents, int *piNumb
     }
 
     /* 3. 优先取出目录放入到ptDirContents */
-    DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    //DBG_PRINTF("<6>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     for(i = 0, j = 0; i < iNum; i++){
         // 不处理目录.和..
         if(0 == strcmp(aptNameList[i]->d_name, ".") || (0 == strcmp(aptNameList[i]->d_name, ".."))){
             continue;
         }
         if(isDir(strDirName, aptNameList[i]->d_name)){
-            strncpy(aptDirContents[j]->strName, aptNameList[i]->d_name, FILE_NAME_SIZE);
-            aptDirContents[j]->strName[FILE_NAME_SIZE - 1] = '\0';
+            strncpy(aptDirContents[j]->strName, aptNameList[i]->d_name, 256);
+            aptDirContents[j]->strName[255] = '\0';
             aptDirContents[j]->eFileType = FILETYPE_DIR;
             free(aptNameList[i]);
             aptNameList[i] = NULL;

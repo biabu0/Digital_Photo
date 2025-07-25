@@ -11,6 +11,7 @@
 #include <picfmt_manager.h>
 #include <render.h>
 #include <debug_manager.h>
+#include <music_manager.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -44,7 +45,14 @@ int main(int argc, char ** argv){
 
 	SelectAndInitDefaultDispDev("fb");
 
-	AllocVideoMem(5);
+
+	iError = MusicParserInit();
+	if(iError){
+		DBG_PRINTF("MusicParser init error\n");
+	}
+
+
+	AllocVideoMem(8);
 	InputInit();
 
 	AllInputDeviceInit();

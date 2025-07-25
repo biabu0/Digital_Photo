@@ -20,6 +20,8 @@
         "stdio.h": "c",
         "setjmp.h": "c",
         "file.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "common_st.h": "c",
+        "music_manager.h": "c"
     }
 }

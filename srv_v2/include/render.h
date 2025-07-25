@@ -21,4 +21,5 @@ int PicMergeRegion(int iStartXofNewPic, int iStartYofNewPic, int iStartXofOldPic
 
 typedef void (* __render_event)(void);
 int register_render_event(__render_event render_event);
+int MergeString(int iTopLeftX, int iTopLeftY, int iBotRightX, int iBotRightY, unsigned char *strTextString, struct VideoMem *ptVideoMem, unsigned int dwColor);
 #endif

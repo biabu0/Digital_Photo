@@ -6,4 +6,5 @@ obj-y += auto_page.o
 obj-y += interval_page.o
 obj-y += setting_page.o
 obj-y += text_page.o
+obj-y += music_page.o
 

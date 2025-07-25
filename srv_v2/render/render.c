@@ -317,6 +317,7 @@ static int MergeOneFontToVideoMem(PT_FontBitMap ptFontBitMap, PT_VideoMem ptVide
 	return 0;
 }
 
+
 /**********************************************************************
  * 函数名称： ClearRectangleInVideoMem
  * 功能描述： 清除VideoMem中某个矩形区域,设为某颜色
@@ -345,6 +346,8 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
 	unsigned char *pucBufEnd;
 	unsigned int dwCode;
 	T_FontBitMap tFontBitMap;
+	struct Layout tClearRegionDisLayout;
+
 	
 	int bHasGetCode = 0;
 
@@ -360,7 +363,12 @@ int MergerStringToCenterOfRectangleInVideoMem(int iTopLeftX, int iTopLeftY, int 
 	pucBufStart = pucTextString;
 	pucBufEnd   = pucTextString + strlen((char *)pucTextString);   
 	/* 0. 清除这个区域 */
-	ClearRectangleInVideoMem(iTopLeftX, iTopLeftY, iBotRightX, iBotRightY, ptVideoMem, COLOR_BACKGROUND);
+	tClearRegionDisLayout.iTopLeftX  = iTopLeftX;
+	tClearRegionDisLayout.iTopLeftY  = iTopLeftY;
+	tClearRegionDisLayout.iBotRightX = iBotRightX;
+	tClearRegionDisLayout.iBotRightY = iBotRightY;
+	//ClearRectangleInVideoMem(iTopLeftX, iTopLeftY, iBotRightX, iBotRightY, ptVideoMem, CONFIG_MUSIC_BG_COLOR);
+	ClearVideoMemRegion(ptVideoMem, &tClearRegionDisLayout, COLOR_BACKGROUND);
 	/* 1.先计算字符串显示的总体宽度、高度 */
 	while (1)
 	{

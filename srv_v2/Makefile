@@ -16,7 +16,7 @@ export STRIP OBJCOPY OBJDUMP
 CFLAGS := -Wall -O2 -g
 CFLAGS += -I $(shell pwd)/include
 
-LDFLAGS := -lm -lfreetype -lts -lpthread -ljpeg
+LDFLAGS := -lm -lfreetype -lts -lpthread -ljpeg -lmad -lasound
 
 export CFLAGS LDFLAGS
 
@@ -36,6 +36,8 @@ obj-y += debug/
 obj-y += render/
 obj-y += page/
 obj-y += file/
+obj-y += music/
+obj-y += system/
 all : 
 	make -C ./ -f $(TOPDIR)/Makefile.build
 	$(CC) $(LDFLAGS) -o $(TARGET) built-in.o

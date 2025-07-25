@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <render.h>
+#include <music_manager.h>
 
 static PT_PageAction g_ptPageActionHead;	//结构体链表头部
 
@@ -133,7 +134,7 @@ int GeneratePage(PT_PageLayout ptPageLayout, PT_VideoMem ptVideoMem){
 		ClearVideoMem(ptVideoMem, COLOR_BACKGROUND);
 
         tIconPixelDatas.iBpp = ptPageLayout->iBpp;		
-        //tIconPixelDatas.aucPixelDatas = malloc(ptPageLayout->iMaxTotalBytes);
+        tIconPixelDatas.aucPixelDatas = malloc(ptPageLayout->iMaxTotalBytes);
         if(tIconPixelDatas.aucPixelDatas == NULL){
             DBG_PRINTF("<3>tIconPixelDatas.aucPixelDatas malloc error!\n");
             return -1;
@@ -255,12 +256,14 @@ int PagesInit(void){
 	int iError;
 
 	iError = MainPageInit();
-	iError = BrowsePageInit();
-	iError = ExplorePageInit();
-	iError = AutoPageInit();
-	iError = SettingPageInit();
-	iError = IntervalPageInit();
-	iError = TextPageInit();
+	iError |= BrowsePageInit();
+	iError |= ExplorePageInit();
+	iError |= AutoPageInit();
+	iError |= SettingPageInit();
+	iError |= IntervalPageInit();
+	iError |= TextPageInit();
+	iError |= MusicPageInit();
+
 	return iError;
 }
 

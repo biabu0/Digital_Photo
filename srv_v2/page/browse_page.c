@@ -10,6 +10,7 @@
 #include<disp_manager.h>
 #include<render.h>
 #include<input_manager.h>
+#include <music_manager.h>
 #include<file.h>
 #include<string.h>
 #include<draw.h>
@@ -939,6 +940,7 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                             tPageParams.strCurPicFile[255] = '\0';
                             // DBG_PRINTF("<5>FILETYPE_FILE!\n");
                             // DBG_PRINTF("<5>%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+                            DBG_PRINTF("tPageParams.strCurPicFile:%s\n", tPageParams.strCurPicFile);
                             if(isPictureFileSupported(tPageParams.strCurPicFile)){
                                 DBG_PRINTF("<5>Enter manual page!\n");
                                 tPageParams.iPageID = ID("browse");
@@ -949,7 +951,15 @@ static void BrowsePageRun(PT_PageParams ptParentParams){
                                 //ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
                                 ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
                                 DBG_PRINTF("<5>Return from manual page--->>>ShowBrowsePage!\n");
-                            }else if(IsTxtFileByExtension(tPageParams.strCurPicFile)){
+                            }
+                            if(isMusicSupport(tPageParams.strCurPicFile)){
+                                DBG_PRINTF("<5>Enter music page!\n");
+                                tPageParams.iPageID = ID("browse");
+                                Page("music")->Run(&tPageParams);
+                                 DBG_PRINTF("<5>Return from music page!\n");
+                                ShowBrowsePage(&g_tBrowsePageMenuIconsLayout);
+                            }
+                            if(IsTxtFileByExtension(tPageParams.strCurPicFile)){
                                 DBG_PRINTF("<5>Enter text page!\n");
                                 tPageParams.iPageID = ID("browse");
                                 Page("text")->Run(&tPageParams);

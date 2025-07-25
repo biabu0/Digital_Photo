@@ -89,7 +89,7 @@ int GetInputEvent(PT_InputEvent ptInputEvent){
 int InputInit(void){
     int iError;
     //iError |= StdinInit();
-    iError |= TouchScreenInit();
+    iError  = TouchScreenInit();
     iError |= MouseInit();
     return iError;
 }
